@@ -1,0 +1,6 @@
+Region,n_visions_region,n_visions_MT_region,n_visions_global,n_visions_MT_global,n_visions_region_g,n_visions_MT_region_g,ratio_global,ratio_transf
+Americas,196,6,51,1,247,7,0.20647773279352227,0.02834008097165992
+Europe and Central Asia,135,4,51,1,186,5,0.27419354838709675,0.026881720430107527
+Africa,17,0,51,1,68,1,0.75,0.014705882352941176
+Asia and the Pacific,40,0,51,1,91,1,0.5604395604395604,0.01098901098901099
+Antarctica,0,0,51,1,51,1,1,0.0196078431372549
