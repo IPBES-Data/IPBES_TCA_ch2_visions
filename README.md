@@ -2,7 +2,7 @@
 [![Project Status: Active – The project has reached a stable, usable state and is being actively developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
 [![License: CC BY-SA 4.0](https://img.shields.io/badge/License-CC_BY_4.0-lightgrey.svg)](https://creativecommons.org/licenses/by/4.0/)
 
-# %PROJECT_NAME%
+# VISIONS IN MAPS
 
 This repository is part of an ongoing IPBES project.
 
@@ -13,29 +13,24 @@ Nevertheless, please feel free to browse the code and re-use it at your own risk
 Once finalised, the final repo will be published on Zenodo 
 - LICENSE?
 
-
-
-The info in `% %` need to be changed to the appropriate values. In addition, the empty fields need to be filled in.
-
-
 ## Metadata
 
-- **Project name**: %PROJECT_NAME%
-- **Assessment**: %ASSESSMENT%
-- **Chapter**: %CHAPTER%
-- **Short Name**: %SHORT_NAME%
+- **Project name**: Visions in maps
+- **Assessment**: TCA
+- **Chapter**: 2
+- **Short Name**: visions
 
-- **Requested by**:
-- **Requested in/during**:
+- **Requested by**: Sebastian Villasante
+- **Requested in/during**:by email to Aidin (followed up in various meetings)
 
-- **Context**:
-- **Relevant chapters**:
-- **Task(s)**:
-- **Contact point from the expert team**: %ASSIGNED_TO% (tsu data)
-- **Contact point from BBA tsu**:
-- **Contact point from data tsu**:
-- **Timeline and deadline**:
-- **Latest status**: %STATUS% (e.g. in planning, in progress, completed, canceled, waiting for response etc.)
+- **Context**: ~1000 visions have been identified by the TCA team. Based on the Location (where the vision were designed or ) and the geographical scope of those visions (regions where the vision will act), the DATA TSU we will attempt to: 1- map the visions, 2- analize if location of visions correlate with state of the socioeco system (via indicators)
+- **Relevant chapters**: 2
+- **Task(s)**: Overlap vision locations with global indicators on the state of different elements of the socio-ecological system. Connect it with the work on hotspots of Nexus assessment 
+- **Contact point from the expert team**: Sebastian Villasante
+- **Contact point from assessment tsu**: Camille
+- **Contact point from data tsu**: Yanina
+- **Timeline and deadline**: to be delivered before TAM
+- **Latest status**: in progress
 
 - **email to**:
   - %EMAIL_TO%
@@ -47,13 +42,13 @@ The info in `% %` need to be changed to the appropriate values. In addition, the
   - %EMAIL_CC%
   - ...
 
-- **Github Repo**: [IPBES_xxx_Chy_project_template](https://github.com/rkrug/IPBES_xxx_Chy_project_template) REPLACE WITH CORRECT LINK
-- **Googl Drive Folder**: [%GOOGLE_DRIVE_FOLDER%](%GOOGLE_DRIVE_FOLDER%)
+- **Github Repo**: [IPBES_TCA_ch2_visions](https://github.com/IPBES-Data/IPBES_TCA_ch2_visions) 
+- **Googl Drive Folder**: [visions_CH2](https://drive.google.com/drive/folders/1C9zyLa2ni7kc7imorjMuj_yvKzb5yUmk)
 
 ## Folders
 
 - **`data`**: data files created during the running of the code file and contains cached as well as final data files.
-- **`figures`**: figures created during the running of the code` file in low-res as well as high-res.
+- **`outputs`**: figures, tables, docs created during the running of the code` file in low-res as well as high-res.
 - **`R`**: R scripts used to run the code in the repo. Files in this folder will be sourced initially.
 
 ## Project Description
@@ -68,4 +63,4 @@ The info in `% %` need to be changed to the appropriate values. In addition, the
 
 
 ## Reports
-- [Example Report](Report.html)
+- [Visions](https://docs.google.com/document/d/1vSOKbFEv8AtRpoV2gfkdgHXQqeugLSwN/edit#heading=h.dss0efni7zts)
