@@ -16,13 +16,14 @@ library(lubridate) # for working with dates
 library(ggplot2)  # for creating graphs
 
 library(sf)
+library(tidyterra)
 
 library(FAOSTAT) # to download and manipulate data from FAO
 library(httr) # to download data off of Zenodo
 
 ### Set dirs-----
 dir_drive <- 'G:/.shortcut-targets-by-id/18yX-16J7W2Kyq4Mn3YbU_HTjslZyr4hE/IPBES Task Force Knowledge and Data/_DATA/_TSU Internal/_ Weekly reports/Files - Yanina/TfC/visions_CH2'
-dir_git <- 'C:/Users/yanis/Documents/scripts/IPBES_TSU-DATA/TfC/visions_CH2/Data'
+dir_git <- 'C:/Users/yanis/Documents/scripts/IPBES-Data/IPBES_TCA_ch2_visions/'
 
 ### Load IPBES regions-----
 
@@ -97,18 +98,56 @@ rm(sub_regions_fixed_sf)
 # Free used memory
 gc()
 
+# load simplified geometries 
+ipbes_regions_fixed <- terra::vect(paste0(dir_git,"data/IPBES_Regions_Subregions/IPBES_Regions_Subregions2OK_simp.gpkg")) 
+ipbes_regions_fixed <- read_sf(paste0(dir_git,"data/IPBES_Regions_Subregions/IPBES_Regions_Subregions2OK_simp.gpkg")) 
+ipbes_regions_fixed <- read_sf('C:/Users/yanis/Documents/regions/IPBES_regions_subregions/IPBES_Regions_Subregions2OK_simp.gpkg') 
 
-### Load visions with location information-----
+ipbes_regions_fixed %>% dplyr::distinct(name)
+
+# load countries correspondence
+ipbes_countries <- read_csv(paste0(dir_git,"data/IPBES_Regions_Subregions/IPBES_Regions_Subregions2.csv")) 
+
+# plots
+region = ggplot(ipbes_regions_fixed) + 
+  geom_spatvector(
+    mapping = aes(fill = Region), 
+    color = NA,
+    data = NULL,
+    na.rm = FALSE,
+    show.legend = TRUE
+  ) +
+  scale_fill_viridis_d() +
+  coord_sf(crs = 4326) #latlong
+region
+
+sub_region = ggplot(filter(ipbes_regions_simp, Sub_Region %in% unique(selected_iso_regions$Sub_Region))) + 
+  geom_spatvector(
+    mapping = aes(fill = Sub_Region), 
+    color = NA,
+    data = NULL,
+    na.rm = FALSE,
+    show.legend = FALSE
+  ) +
+  scale_fill_viridis_d() +
+  coord_sf(crs = 4326) #latlong
+sub_region
+
+### Load visions -----
+
 ## Location----
-visions_l = read_csv(paste0(dir_git,'/visions/Ch2_MasterTableExcel_20230621_Quan_analysis.xlsx - Sample.csv'), skip = 1)
-names(visions)
-visions_l = dplyr::select(visions_l, 
-                        "ID", "name" = "Vision Name\nName of the vision, assign one if not present in the text", 
-                        "Location"="Location\nProvide place/region name", "Country" = "Country\nor countries",
-                        "ISO Country","ISO Region","ISO Sub Region",
-                        "Most_Transformative" = "Most Transfformative") 
+visions_l = read_csv(paste0(dir_git,'data/visions/Ch2_MasterTableExcel_20230621_Quan_analysis.xlsx - Sample.csv'), skip = 1)
+names(visions_l)
+visions_l %>%  distinct(ID) %>% count()
+
+# visions_l = dplyr::select(visions_l, 
+#                         "ID", "name" = "Vision Name\nName of the vision, assign one if not present in the text", 
+#                         "Location"="Location\nProvide place/region name", "Country" = "Country\nor countries",
+#                         "ISO Country","ISO Region","ISO Sub Region",
+#                         "Most_Transformative" = "Most Transfformative") 
+
 # Clean visions
-visions = visions %>% 
+visions = visions_l %>% 
   filter(`ISO Region` != 'USA') %>% 
   mutate(`ISO Region` = gsub('ASIAN AND THE PACIFIC', 'ASIA AND THE PACIFIC',`ISO Region`)) %>% 
   mutate(`ISO Region` = gsub('AMERICA$', 'AMERICAS',`ISO Region`)) %>% 
@@ -127,11 +166,13 @@ visions = visions %>%
   mutate(Sub_Region = gsub('nort-east asia','north-east asia',Sub_Region)) %>% 
   mutate(Sub_Region = gsub('north east asia','north-east asia',Sub_Region)) %>% 
   mutate(Sub_Region = gsub('south east asia','south-east asia',Sub_Region))
+visions %>%  distinct(ID) %>% count()
 
 # checks
 visions %>% distinct(Region)
 visions %>% distinct(Sub_Region) %>% count()
-ipbes_regions_fixed_df %>%  distinct(Sub_Region) %>% count()
+#ipbes_regions_fixed_df %>%  distinct(Sub_Region) %>% count()
+ipbes_countries %>%  distinct(Sub_Region) %>% count()
 
 ## Aggregate vision by region
 T_visions_rich_region = visions %>% 
@@ -146,6 +187,7 @@ MT_visions_rich_region = visions %>%
   filter(Most_Transformative == TRUE) %>% 
   group_by(Region) %>% 
   summarize(n_visions_most_tranf=n())
+
 visions_rich_region = inner_join(T_visions_rich_region,MT_visions_rich_region, by = "Region")
 rm(T_visions_rich_region,MT_visions_rich_region)
 
@@ -156,12 +198,14 @@ T_visions_rich_sub_region = visions %>%
   group_by(Sub_Region) %>% 
   summarize(n=n()) %>% 
   mutate(Sub_Region = tolower(Sub_Region))
+
 MT_visions_rich_sub_region = visions %>% 
   filter(!is.na(Sub_Region)) %>% 
   distinct(ID, Sub_Region, .keep_all = TRUE) %>%
   filter(Most_Transformative == TRUE) %>% 
   group_by(Sub_Region) %>% 
   summarize(n_visions_most_tranf=n())
+
 visions_rich_sub_region = full_join(T_visions_rich_sub_region,MT_visions_rich_sub_region, by = "Sub_Region")
 rm(T_visions_rich_sub_region,MT_visions_rich_sub_region)
 
@@ -179,16 +223,19 @@ MT_visions_rich_country = visions %>%
   filter(Most_Transformative == TRUE) %>% 
   group_by(ISO_3) %>% 
   summarize(n_visions_most_tranf=n())
+
 visions_rich_country = full_join(T_visions_rich_country,MT_visions_rich_country, by = "ISO_3")
 rm(T_visions_rich_country,MT_visions_rich_country)
 
-
 ## Scope-----
-visions = read_csv(paste0(dir_git,'/visions/Ch2_MasterTableExcel_20230621_Quan_analysis.xlsx - Sample (2).csv'), skip = 1)
-names(visions)
+visions_s = read_csv(paste0(dir_git,'data/visions/Ch2_MasterTableExcel_20230621_Quan_analysis.xlsx-Sample_Feb15.csv'), skip = 1)
+names(visions_s)
+visions_s %>%  distinct(ID) %>%  count()
+visions_s %>%  filter(`Most Transformative` == TRUE) %>% distinct(ID) %>%  count()
+
 
 # clean table
-visions = visions %>% 
+visions = visions_s %>% 
   # edit columns
   dplyr::select("ID", "name" = "Vision Name\nName of the vision, assign one if not present in the text", 
                 "local_scope" = "Local scale (Y/N) \nThe intended scope of the vision is local",                                                                                                                                                                                                                                                                           
@@ -227,83 +274,112 @@ visions = visions %>%
   dplyr::mutate(Sub_Region = gsub('And ','and ',Sub_Region, ignore.case = FALSE)) %>% 
   dplyr::mutate(Sub_Region = gsub('The ','the ',Sub_Region, ignore.case = FALSE)) %>% 
   dplyr::mutate(Sub_Region = gsub('and Adjacent Islands','and adjacent islands',Sub_Region, ignore.case = FALSE)) %>% 
+  dplyr::mutate(Region = gsub('americas', 'Americas',Region)) %>% 
+  dplyr::mutate(Region = gsub('europe and central asia', 'Europe and Central Asia',Region)) %>% 
+  dplyr::mutate(Region = gsub('africa', 'Africa',Region)) %>% 
+  dplyr::mutate(Region = gsub('asia and the pacific', 'Asia and the Pacific',Region)) %>% 
+  dplyr::mutate(Region = gsub('And ','and ',Region, ignore.case = FALSE)) %>% 
+  dplyr::mutate(Region = gsub('The ','the ',Region, ignore.case = FALSE)) %>% 
+  #dplyr::mutate(Region = gsub('antarctica', 'Antarctica',Region))%>% 
   # clean NAs
   dplyr::filter(!is.na(Region)) %>% 
   dplyr::filter(!is.na(Sub_Region))
 
 visions %>% distinct(Region)
 visions %>% distinct(Sub_Region)
+visions %>%  distinct(ID) %>%  count()
+visions %>%  filter(Most_Transformative ==TRUE) %>% distinct(ID) %>%  count()
 
 
-# calculate global visions 
+
+# calculate unique global visions 
 global = visions %>% 
-  # Global scope (col M == Yes, removing the ones already included in multinational scope)
-  filter(global_scope == 'Yes' & multinational_scope == 'No') %>% 
-  mutate(n_visions_global = n_distinct(ID)) %>%  #51
-  # Most transformative (col BX == TRUE, selected in light blue)
-  filter(Most_Transformative == TRUE) %>% 
-  mutate(n_visions_MT_global=n_distinct(ID)) %>%  #1
-  dplyr::select(n_visions_global,n_visions_MT_global) %>% 
-  filter(row_number()==1)
+  # Global scope (col M == Yes, removing the ones already included in other geographic scopes)
+  filter(global_scope == 'Yes' &  
+           multinational_scope == 'No' & 
+           national_scope == 'No'& 
+           regional_scope == 'No'& 
+           local_scope == 'No'
+           ) %>% 
+  distinct(ID,Most_Transformative) %>% 
+  group_by(Most_Transformative) %>% 
+  summarize(n_visions=n())  #51 --> 33 (no transformative one)
+  
 
 ## Aggregate visions by region------
-visions_rich_region = visions %>% 
-  # Multinational scope (col L == Yes)
-  filter(multinational_scope == "Yes") %>% 
+visions_region = visions %>% 
+  # remove global ones (col M == Yes)
+  filter(global_scope == 'No'|  
+           (multinational_scope == 'Yes' |
+           national_scope == 'Yes'| 
+           regional_scope == 'Yes'| 
+           local_scope == 'Yes'
+           )
+         ) %>%  ##multinational_scope == "Yes" 
+  # keep unique visions per region
+  distinct(ID, Region) %>% 
   group_by(Region) %>% 
   mutate(n_visions_region = n_distinct(ID)) %>% 
   ungroup() %>% 
   distinct(Region, n_visions_region)
 
-visions_MT_rich_region = visions %>% 
-  # Multinational scope (col L == Yes)
-  filter(multinational_scope == "Yes") %>% 
+MT_visions_region = visions %>% 
+  # remove global ones (col M == Yes)
+  filter(global_scope == 'No') %>%  ##multinational_scope == "Yes" 
   # Most transformative (col BX == TRUE, selected in light blue)
   filter(Most_Transformative == TRUE) %>% 
+  # keep unique visions per region
+  distinct(ID, Region) %>%
   group_by(Region) %>% 
   mutate(n_visions_MT_region = n_distinct(ID)) %>% 
   ungroup() %>%  
   distinct(Region, n_visions_MT_region)
 
 # combine global, regional and most transformative vision
-visions_region = visions_rich_region %>% 
-  full_join(visions_MT_rich_region, by = "Region") %>% 
+visions_region_rich = visions_region %>% 
+  full_join(MT_visions_region, by = "Region") %>% 
   replace(is.na(.), 0) %>% 
   # add global visions
-  mutate(n_visions_global = global$n_visions_global) %>% 
-  mutate(n_visions_MT_global = global$n_visions_MT_global) %>% 
+  mutate(n_visions_global = global$n_visions) %>% 
+  mutate(n_visions_MT_global = 0) %>% 
   mutate(n_visions_region_g = n_visions_region + n_visions_global) %>% 
   mutate(n_visions_MT_region_g = n_visions_MT_region + n_visions_MT_global) %>% 
   # calculate ratios
   mutate(ratio_global = n_visions_global/n_visions_region_g) %>% 
   mutate(ratio_transf = n_visions_MT_region_g/n_visions_region_g) %>% 
+  # add Antarctica (include global regions)
   rbind(data.frame('Region' = 'antarctica', 'n_visions_region' = 0, 'n_visions_MT_region' = 0, 
-                   'n_visions_region_g' = global$n_visions_global, 'n_visions_MT_region_g' = global$n_visions_MT_global,
-                   'n_visions_global' = global$n_visions_global, 'n_visions_MT_global' = global$n_visions_MT_global,
-                   'ratio_global' = global$n_visions_global/global$n_visions_global, 'ratio_transf' = global$n_visions_MT_global/global$n_visions_global)) %>% 
+                   'n_visions_region_g' = global$n_visions, 'n_visions_MT_region_g' = 0,
+                   'n_visions_global' = global$n_visions, 'n_visions_MT_global' = 0,
+                   'ratio_global' = 1, 'ratio_transf' = 0)) %>% 
   mutate(Region = gsub('americas', 'Americas',Region)) %>% 
   mutate(Region = gsub('europe and central asia', 'Europe and Central Asia',Region)) %>% 
   mutate(Region = gsub('africa', 'Africa',Region)) %>% 
   mutate(Region = gsub('asia and the pacific', 'Asia and the Pacific',Region)) %>% 
-  mutate(Region = gsub('antarctica', 'Antarctica',Region))
+  mutate(Region = gsub('antarctica', 'Antarctica',Region))%>% 
+  rename(name = Region )
 
-write_csv(visions_region, paste0(dir_git,'/visions_region.csv'))  
+#write_csv(visions_region_rich, paste0(dir_git,'/data/visions_region2.csv'))  
 
-rm(T_visions_rich_region,MT_visions_rich_region)
+rm(visions_region,MT_visions_region)
 
 ## Aggregate visions by sub-region------
-visions_rich_sub_region = visions %>% 
-  # Multinational scope (col L == Yes)
-  filter(multinational_scope == "Yes") %>% 
+visions_sub_region = visions %>% 
+  # remove global ones (col M == Yes)
+  filter(global_scope == 'No') %>%  ##multinational_scope == "Yes" 
+  # keep unique visions per sub-region
+  distinct(ID, Sub_Region) %>%
   group_by(Sub_Region) %>% 
   mutate(n_visions_sub_region = n_distinct(ID)) %>% 
   ungroup() %>% 
   distinct(Sub_Region, n_visions_sub_region)
 
-visions_MT_rich_sub_region = visions %>% 
-  # Multinational scope (col L == Yes)
-  filter(multinational_scope == "Yes") %>% 
-  # Most transformative (col BX == TRUE, selected in light blue)
+MT_visions_sub_region = visions %>% 
+  # remove global ones (col M == Yes)
+  filter(global_scope == 'No') %>%  ##multinational_scope == "Yes" 
+  # keep unique visions per sub-region
+  distinct(ID, Sub_Region, Most_Transformative) %>%
+  # Keep most transformative (col BX == TRUE, selected in light blue)
   filter(Most_Transformative == TRUE) %>% 
   group_by(Sub_Region) %>% 
   mutate(n_visions_MT_sub_region = n_distinct(ID)) %>% 
@@ -311,24 +387,57 @@ visions_MT_rich_sub_region = visions %>%
   distinct(Sub_Region, n_visions_MT_sub_region)
 
 # combine global, regional and most transformative vision
-visions_sub_region = visions_rich_sub_region %>% 
-  full_join(visions_MT_rich_sub_region, by = "Sub_Region") %>% 
+visions_sub_region_rich = visions_sub_region %>% 
+  full_join(MT_visions_sub_region, by = "Sub_Region") %>% 
   replace(is.na(.), 0) %>% 
   # add global visions
-  mutate(n_visions_global = global$n_visions_global) %>% 
-  mutate(n_visions_MT_global = global$n_visions_MT_global) %>% 
+  mutate(n_visions_global = global$n_visions) %>% 
+  mutate(n_visions_MT_global = 0) %>% 
   mutate(n_visions_sub_region_g = n_visions_sub_region + n_visions_global) %>% 
   mutate(n_visions_MT_sub_region_g = n_visions_MT_sub_region + n_visions_MT_global) %>% 
   # calculate ratios
   mutate(ratio_global = n_visions_global/n_visions_sub_region_g) %>% 
   mutate(ratio_transf = n_visions_MT_sub_region_g/n_visions_sub_region_g) %>% 
-  rbind(data.frame('Sub_Region' = 'Antarctica', 'n_visions_sub_region' = 0, 'n_visions_MT_sub_region' = 0, 
-                   'n_visions_sub_region_g' = global$n_visions_global, 'n_visions_MT_sub_region_g' = global$n_visions_MT_global,
-                   'n_visions_global' = global$n_visions_global, 'n_visions_MT_global' = global$n_visions_MT_global,
-                   'ratio_global' = global$n_visions_global/global$n_visions_global, 'ratio_transf' = global$n_visions_MT_global/global$n_visions_global)) 
+  rename(name = Sub_Region )
 
-write_csv(visions_sub_region, paste0(dir_git,'/visions_sub_region.csv')) 
-# joins with spatial data is done directly in QGIS
+rm(visions_sub_region,MT_visions_sub_region)
+
+# combine regions and sub-regions 
+
+names(visions_region_rich)
+names(visions_sub_region_rich) = c("name","n_visions_region","n_visions_MT_region","n_visions_global","n_visions_MT_global",
+                                   "n_visions_region_g","n_visions_MT_region_g","ratio_global","ratio_transf")
+
+visions_spatial = rbind(visions_region_rich,visions_sub_region_rich)
+write_csv(visions_sub_region_rich, paste0(dir_git,'output/visions_spatial.csv')) 
+
+## Join visions and IPBES regions-----
+
+visions_spatial_shp <- ipbes_regions_fixed %>% 
+  # add visions  
+  dplyr::left_join(visions_spatial, by = 'name') 
+
+#checks
+names(visions_spatial_shp)
+missing = anti_join(visions_spatial,ipbes_regions_fixed,  by = 'name')
+visions_spatial %>%  distinct(name) %>%  view()
+visions_spatial_shp %>%  distinct(name) %>%  view() #error
+
+terra::writeVector(visions_spatial_shp, paste0(dir_git,'output/visions_spatial.gpkg'))
+terra::writeVector(visions_spatial_shp, 'C:/Users/yanis/Documents/scripts/ipbes_nexus_chp2/Data/Nexus_Indicators/_impact_analysis/IPBES_regions_visions/visions_spatial.gpkg',overwrite=TRUE)
+
+## Plot visions and IPBES regions-----
+sub_regions = ggplot(filter(visions_spatial_shp, !is.na(parent_id))) + 
+  geom_spatvector(
+    mapping = aes(fill = n_visions_region), 
+    color = NA,
+    data = NULL,
+    na.rm = FALSE,
+    show.legend = FALSE
+  ) +
+  scale_fill_viridis_d() +
+  coord_sf(crs = 4326) #latlong
+sub_regions
 
 ### Load Population data-----
 
