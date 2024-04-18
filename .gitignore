@@ -7,6 +7,9 @@ data/IPBES_regions_subregions
 data/tests
 data/visions
 data/Population_FAO
+data/corpus_cases
+data/cases
 output/data_region.shp
 output/data_sub_region.shp
-
+*.shp
+*.gpkg
