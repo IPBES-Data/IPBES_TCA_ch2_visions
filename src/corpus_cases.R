@@ -44,7 +44,7 @@ dir_git <- 'C:/Users/yanis/Documents/scripts/IPBES-Data/IPBES_TCA_ch2_visions/'
 mask_ocean = terra::rast('C:/Users/yanis/Documents/regions/ocean_mask.tif')
 
 ### Load anthromes change data-----
-ant_change_dir = 'C:/Users/yanis/Documents/IPBES/human_modification_indic/anthrome_change/fraccover_classbased_100/fraccover_class_100/'
+ant_change_dir = 'C:/Users/yanis/Documents/IPBES/human_modification_indic/anthrome_change/fraccover_class_100/fraccover_class_100/'
 
 #### Class 190: Urban----
 
@@ -52,7 +52,7 @@ urban_change <- lapply(as.list
                    (list.files(paste0(ant_change_dir, 'fraccover_190_100/'),full.names = T, pattern = '.tif$')
                    ), 
                    terra::rast)
-urban_change_layer = as.character(seq(from = 1992, to = 2018, by = 1))
+change_layer = as.character(seq(from = 1992, to = 2018, by = 1))
 
 #terra::plot(urban_change[[1]])
 
@@ -64,7 +64,7 @@ mask_ocean_p = terra::project(mask_ocean, urban_change[[1]],
 
 # calculate global mean
 LCchange1 = data.frame()       
-for (i in 1:length(urban_change)){
+for (i in 1:length(change_layer)){
   print(i)
   print(urban_change_layer[i])
   # mask oceans
@@ -75,16 +75,16 @@ for (i in 1:length(urban_change)){
   names(mean_value) = c('year', 'urban_mean')
   LCchange1 = rbind(LCchange1,mean_value)
 }
+terra::plot(urban_change[[27]])
 
-
-#### Class 10-20-30-40: Agriculature------
+#### Class 10-20-30-40: Agriculture------
 
 cl10_change <- lapply(as.list
                        (list.files(paste0(ant_change_dir, 'fraccover_10_100/'),full.names = T, pattern = '.tif$')
                        ), 
                        terra::rast)
 cl20_change <- lapply(as.list
-                      (list.files(paste0(ant_change_dir, 'fraccover_20-100/'),full.names = T, pattern = '.tif$')
+                      (list.files(paste0(ant_change_dir, 'fraccover_20_100/'),full.names = T, pattern = '.tif$')
                       ), 
                       terra::rast)
 cl30_change <- lapply(as.list
@@ -95,11 +95,11 @@ cl40_change <- lapply(as.list
                       (list.files(paste0(ant_change_dir, 'fraccover_40_100/'),full.names = T, pattern = '.tif$')
                       ), 
                       terra::rast)
-change_layer = as.character(seq(from = 1992, to = 2018, by = 1))
+#change_layer = as.character(seq(from = 1992, to = 2020, by = 1))
 
 # add percentages of different agricultural classes
 agri = list()
-for (j in 1:length(cl10_change)){
+for (j in 1:length(change_layer)){
   print(j)
   agri[j] = as.list(sum(cl10_change[[j]],cl20_change[[j]],
                         cl30_change[[j]],cl40_change[[j]]))
@@ -121,7 +121,7 @@ for (i in 1:length(agri)){
 
 # add percentages of different agricultural classes AND urban
 anthropo = list()
-for (j in 1:length(urban_change)){
+for (j in 1:length(change_layer)){
   print(j)
   anthropo[j] = as.list(sum(urban_change[[j]], cl10_change[[j]],
                             cl20_change[[j]],cl30_change[[j]],cl40_change[[j]]))
@@ -176,16 +176,18 @@ cl170_change <- lapply(as.list
                       (list.files(paste0(ant_change_dir, 'fraccover_170_100/'),full.names = T, pattern = '.tif$')
                       ), 
                       terra::rast)
-change_layer = as.character(seq(from = 1992, to = 2018, by = 1))
+#change_layer = as.character(seq(from = 1992, to = 2020, by = 1))
 
 # add percentages of different forest classes
 forest = list()
-for (j in 1:length(cl50_change)){
+for (j in 1:length(change_layer)){
   print(j)
   forest[j] = as.list(sum(cl50_change[[j]],cl60_change[[j]],cl70_change[[j]],
                           cl80_change[[j]],cl90_change[[j]],cl100_change[[j]],
                           cl160_change[[j]],cl170_change[[j]]))
 }
+terra::plot(cl50_change[[1]])
+terra::plot(cl50_change[[27]])
 
 # calculate global mean with ocean mask
 LCchange4 = data.frame()       
@@ -220,21 +222,25 @@ land_cover_change = LCchange1 %>%
   inner_join(LCchange4, by = 'year') 
 
 #### Calculate rate of change-----
-range(land_cover_change$anthropo_mean)
-range(land_cover_change$forest_mean)
 
 land_cover_change = land_cover_change %>% 
   mutate(anthropo_mean_lag = lag(anthropo_mean, default = first(anthropo_mean)),
          antropo_change = anthropo_mean - anthropo_mean_lag) %>% 
   mutate(forest_mean_lag = lag(forest_mean, default = first(forest_mean)),
          forest_change = forest_mean - forest_mean_lag) %>% 
-  mutate(year = as.integer(year))
-write_csv(land_cover_change, 'C:/Users/yanis/Documents/IPBES/human_modification_indic/anthrome_change/fraccover_classbased_100/global_lc_change.csv')
+  mutate(year = as.integer(year)) %>% 
+  mutate(anthropo_mean_0 = anthropo_mean - first(anthropo_mean)) %>% 
+  mutate(forest_mean_0 = forest_mean - first(forest_mean)) %>% 
+  dplyr::select(-anthropo_mean_lag, -forest_mean_lag)
+write_csv(land_cover_change, 'C:/Users/yanis/Documents/IPBES/human_modification_indic/anthrome_change/fraccover_class_100/global_lc_change.csv')
 
-land_cover_change = read_csv('C:/Users/yanis/Documents/IPBES/human_modification_indic/anthrome_change/fraccover_classbased_100/global_lc_change.csv')
+#land_cover_change = read_csv('C:/Users/yanis/Documents/IPBES/human_modification_indic/anthrome_change/fraccover_class_100/global_lc_change.csv')
 
 
 # Plot
+range(land_cover_change$anthropo_mean)
+range(land_cover_change$forest_mean)
+
 # Change Separate line charts
 p1 <- ggplot(land_cover_change, aes(x=year, y=antropo_change)) +
   geom_line(color="#69b3a2", size=2) +
@@ -249,20 +255,21 @@ p1 + p2
 
 # Mean in separate charts
 p3 <- ggplot(land_cover_change, aes(x=year, y=anthropo_mean)) +
-  geom_line(color="grey",size=1) +
-  ylim(32, 33) +
-  ggtitle("Forest") +
+  geom_line(color="grey",linewidth=1) +
+  ylim(15.5, 17.5) +
+  ggtitle("Athropo change") +
   theme_ipsum()
 p3
 p4 <- ggplot(land_cover_change, aes(x=year, y=forest_mean)) +
-  geom_line(color="grey",size=1) +
+  geom_line(color="grey",linewidth=1) +
   ylim(32, 33) +
-  ggtitle("Forest") +
+  ggtitle("Forest change") +
   theme_ipsum()
 p4
 
+
 # Forest 2018
-forest_2018 = mask(forest[[27]],mask_ocean_p)
+forest_2018 = terra::mask(forest[[27]],mask_ocean_p)
 forest_2018_df <- as.data.frame(forest_2018, xy = TRUE)
 names(forest_2018_df) = c('x','y','forest_2018')
 forest_2018_df <- forest_2018_df %>%
@@ -283,58 +290,129 @@ forest_2018_plot
     #panel.border = element_rect(colour = "black", fill=NA, size=0.5) # sets panel border
   )
 
+### Load Fishery data-----
+fish = read_csv(paste0(dir_git, 'data/corpus_cases/capture_fisheries_production_WDI/API_ER.FSH.CAPT.MT_DS2_en_csv_v2_45470.csv'))
+
+# world
+world_fish = fish %>% 
+  filter(`Country Name`=='World') %>% 
+  dplyr::select(-`Country Name`, -`Country Code`,-`Indicator Code`) %>% 
+  pivot_longer(cols = -`Indicator Name`, names_to = 'year') %>% 
+  dplyr::select(-`Indicator Name`, year, 'cap_fisherie'='value') %>% 
+  mutate(year = as.integer(year)) %>% 
+  filter(!is.na(cap_fisherie))
+
+
 ### Load TFC cases from Corpus-----
 
 oa = readRDS(paste0(dir_git, 'data/corpus_cases/oa_count.rds'))
-corpus_cases = oa$tca_case_years
+corpus = oa$oa_years %>% # whole oa corpus
+  dplyr::select(year = publication_year, total_count = count, -p, -p_cum)
+corpus_cases = oa$tca_case_years %>% # cases within the oa corpus
+  dplyr::select(year = publication_year, cases_count = count,-p, -p_cum) %>% 
+  dplyr::inner_join(corpus, by = 'year') %>% 
+  dplyr::mutate(prop_cases = cases_count / total_count) #prop of cases from all corpus
+#corpus_cases = counts from corpus_cases / counts from corpus
 
-# calculate total cases from 1992 to 2018 calculate relative new cases
-total_cases = corpus_cases %>% 
-  filter(publication_year >= 1992 & publication_year <= 2018) %>% 
-  mutate(total_pub = sum(count)) %>%  
-  distinct(total_pub)
 
-corpus_cases = corpus_cases %>% 
-  filter(publication_year >= 1992 & publication_year <= 2018) %>% 
-  mutate(prop_count = count/total_cases$total_pub) %>% 
-  dplyr::select(-p, -p_cum)
 
-### Join land cover change with TFC cases----
-temp_analisys = inner_join(land_cover_change, corpus_cases, by = c('year' = 'publication_year'))
+
+### Join land cover change and fisheries with TFC cases----
+temp_analisys = land_cover_change %>% 
+  full_join(world_fish) %>% 
+  left_join(corpus_cases, by = c('year' = 'publication_year'))
+  
 names(temp_analisys)
+write_csv(temp_analisys,paste0(dir_git, 'data/corpus_cases/oa_count_temp_analisys.csv'))
 
 
-# Plot
+# Plot-----
 # Separate line charts
-p1 <- ggplot(temp_analisys, aes(x=year, y=antropo_change)) +
-  geom_line(color="#69b3a2", size=2) +
-  ggtitle("Anthropization \n(Prop of change in urban and agricultural areas) ") +
+p1 <- ggplot(temp_analisys, aes(x=year, y=anthropo_mean_0)) +
+  geom_line(color="#69b3a2", linewidth=2) +
+  ggtitle("Anthropization \n(Change in urban and agricultural areas) ") +
   theme_ipsum()
-
-p2 <- ggplot(temp_analisys, aes(x=year, y=prop_count)) +
-  geom_line(color="grey",size=2) +
-  ggtitle("TFC cases \n(Prop of new TFC cases in literature)") +
+p1
+p2 <- ggplot(temp_analisys, aes(x=year, y=cumsum(count)/max(count))) +
+  geom_line(color="grey",linewidth=2) +
+  ggtitle("TFC cases \n(New TFC cases in literature)") +
   theme_ipsum()
-
-p3 <- ggplot(temp_analisys, aes(x=year, y=forest_change)) +
-  geom_line(color="grey",size=2) +
-  ggtitle("Forest change \n(Prop of change in forestl areas)") +
+p2
+p3 <- ggplot(temp_analisys, aes(x=year, y=forest_mean_0)) +
+  geom_line(color="grey",linewidth=2) +
+  ggtitle("Forest change \n(Change in forest land areas)") +
   theme_ipsum()
-p1 + p2 + p3
+p3
+p4 <- ggplot(temp_analisys, aes(x=year, y=cap_fisherie)) +
+  geom_line(color="grey",linewidth=2) +
+  ggtitle("Capture fisheries production (metric tons)") +
+  theme_ipsum()
+p4
 
+range(temp_analisys$anthropo_mean_0)
+range(temp_analisys$forest_mean_0)
+range(temp_analisys$cumCount_0)
+range(temp_analisys$propCumCount_0)
 
-range(temp_analisys$antropo_change)
-range(temp_analisys$prop_count)
-range(temp_analisys$forest_change)
+## Display charts together
+# One Y-axes
 
-## Display both charts together
+temp_analisys_forest = temp_analisys %>% 
+  filter(!is.na(forest_mean)) %>% 
+  arrange(year) %>% 
+  mutate(propCount = count/sum(count)) %>% 
+  mutate(cumCount = cumsum(count)) %>% 
+  mutate(cumCount_0 = cumCount - first(count)) %>% 
+  mutate(propCumCount_0 = cumCount_0/sum(count))
+
+ggplot(temp_analisys_forest, aes(x = year)) + 
+  geom_line(aes(y = forest_mean_0*-1, colour = "Forest land cover Loss"), size=1.5, linetype = "dashed") + 
+  geom_line(aes(y = propCumCount_0, colour = "TFC corpus"), size=1.5) +
+  labs(x = NULL, y = NULL, color = NULL) +
+  theme_ipsum() +
+  theme(legend.position="bottom") +
+  #geom_vline(xintercept=2017,linetype=3, size = 1) + 
+  scale_colour_grey() +
+  scale_x_continuous(breaks = seq(from = 1992, to = 2018, by = 2)) +
+  ylim(0,1)
+
+ggplot(temp_analisys_forest, aes(x = year)) + 
+  geom_line(aes(y = anthropo_mean_0, colour = "Anthopogenic land cover expansion"), size=1.5, linetype = "dashed") + 
+  geom_line(aes(y = propCumCount_0, colour = "TFC corpus"), size=1.5) +
+  labs(x = NULL, y = NULL, color = NULL) +
+  theme_ipsum() +
+  theme(legend.position="bottom") +
+  #geom_vline(xintercept=2017,linetype=3, size = 1) + 
+  scale_colour_grey() +
+  scale_x_continuous(breaks = seq(from = 1992, to = 2018, by = 2)) +
+  ylim(0,1)
+
+temp_analisys_fish = temp_analisys %>% 
+  filter(!is.na(cap_fisherie)) %>% 
+  arrange(year) %>% 
+  mutate(propCount = count/sum(count)) %>% 
+  mutate(cumCount = cumsum(count)) %>% 
+  mutate(cumCount_0 = cumCount - first(count)) %>% 
+  mutate(propCumCount_0 = cumCount_0/sum(count))
+
+ggplot(temp_analisys_fish, aes(x = year)) + 
+  geom_line(aes(y = cap_fisherie/max(cap_fisherie), colour = "Capture fisheries production"), size=1.5, linetype = "dashed") + 
+  geom_line(aes(y = propCumCount_0, colour = "TFC corpus"), size=1.5) +
+  labs(x = NULL, y = NULL, color = NULL) +
+  theme_ipsum() +
+  theme(legend.position="bottom") +
+  #geom_vline(xintercept=2017,linetype=3, size = 1) + 
+  scale_colour_grey() +
+  scale_x_continuous(breaks = seq(from = 1960, to = 2021, by = 5)) +
+  ylim(0,1)
+
 
 #Show 2 series on the same line chart thanks to sec.axis()
 # We can use this sec.axis mathematical transformation to display 2 series that have a different range.
 # ipsum theme to remove the black background and improve the general style, add a title, customize the Y axes to pair them with their related line.
 
 # Value used to transform the data
-coeff <- 1
+coeff <- 152299001
 
 # A few constants
 temperatureColor <- "#69b3a2"
@@ -343,20 +421,20 @@ priceColor <- rgb(0.2, 0.6, 0.9, 1)
 # land cover
 ggplot(temp_analisys, aes(x=year)) +
   
-  geom_line( aes(y=antropo_change), size=2, color=temperatureColor) + 
-  geom_line( aes(y=prop_count / coeff), size=2, color=priceColor) +
+  geom_line( aes(y=anthropo_mean_0), linewidth=2, color=temperatureColor) + 
+  geom_line( aes(y=cumCount_0 / coeff), linewidth=2, color=priceColor) +
   scale_x_continuous(breaks = seq(from = 1992, to = 2018, by = 2)) +
   scale_y_continuous(
     
     # Features of the first axis
-    name = "Velocity of anthropogenic change",
-    limits = c(-0.04,0.12),
+    name = "Anthropogenic land cover expansion",
+    limits = c(0,1),
     n.breaks=6,
     # Add a second axis and specify its features
-    sec.axis = sec_axis(~.*coeff, name="Velocity of new TFC cases in literature")
+    sec.axis = sec_axis(~.*coeff, name="TFC cases in literature")
   ) + 
   geom_hline(yintercept=0, color="black", linetype=2) +
-  annotate("text", x = 1992, y = -0.005, label = "Baseline 1992", color = 'black', hjust = 0)+
+  annotate("text", x = 1992, y = -0.005, label = "Baseline 1992", color = 'black', vjust = 1, hjust = 0)+
   theme_ipsum() +
   
   theme(
@@ -367,20 +445,20 @@ ggplot(temp_analisys, aes(x=year)) +
 # forest land
 ggplot(temp_analisys, aes(x=year)) +
   
-  geom_line( aes(y=forest_change), size=2, color=temperatureColor) + 
-  geom_line( aes(y=prop_count / coeff), size=2, color=priceColor) +
+  geom_line( aes(y=forest_mean_0*-1), linewidth=2, color=temperatureColor) + 
+  geom_line( aes(y=cumCount_0 / coeff), linewidth=2, color=priceColor) +
   scale_x_continuous(breaks = seq(from = 1992, to = 2018, by = 2)) +
   scale_y_continuous(
     
     # Features of the first axis
-    name = "Velocity of forest change",
-    limits = c(-0.06,0.08),
+    name = "Forest land cover loss",
+    limits = c(0,1),
     n.breaks=6,
     # Add a second axis and specify its features
-    sec.axis = sec_axis(~.*coeff, name="Velocity of new TFC cases in literature")
+    sec.axis = sec_axis(~.*coeff, name="TFC cases in literature")
   ) + 
   geom_hline(yintercept=0, color="black", linetype=2) +
-  annotate("text", x = 1992, y = -0.005, label = "Baseline 1992", color = 'black', hjust = 0)+
+  annotate("text", x = 1992, y = 0, label = "Baseline 1992", color = 'black', vjust = 1, hjust = 0)+
   theme_ipsum() +
   
   theme(
@@ -388,3 +466,36 @@ ggplot(temp_analisys, aes(x=year)) +
     axis.title.y.right = element_text(color = priceColor, size=20) 
   )
 
+# One Y-axes
+ggplot(temp_analisys, aes(x = year)) + 
+  geom_line(aes(y = forest_mean_0*-1, colour = "Forest land cover Loss"), size=1.5, linetype = "dashed") + 
+  geom_line(aes(y = propCumCount_0, colour = "TFC corpus"), size=1.5) +
+  labs(x = NULL, y = NULL, color = NULL) +
+  theme_ipsum() +
+  theme(legend.position="bottom") +
+  #geom_vline(xintercept=2017,linetype=3, size = 1) + 
+  scale_colour_grey() +
+  scale_x_continuous(breaks = seq(from = 1992, to = 2018, by = 2)) +
+  ylim(0,1)
+
+ggplot(temp_analisys, aes(x = year)) + 
+  geom_line(aes(y = anthropo_mean_0, colour = "Anthopogenic land cover expansion"), size=1.5, linetype = "dashed") + 
+  geom_line(aes(y = propCumCount_0, colour = "TFC corpus"), size=1.5) +
+  labs(x = NULL, y = NULL, color = NULL) +
+  theme_ipsum() +
+  theme(legend.position="bottom") +
+  #geom_vline(xintercept=2017,linetype=3, size = 1) + 
+  scale_colour_grey() +
+  scale_x_continuous(breaks = seq(from = 1992, to = 2018, by = 2)) +
+  ylim(0,1)
+
+ggplot(temp_analisys, aes(x = year)) + 
+  geom_line(aes(y = cap_fisherie/max(cap_fisherie), colour = "Capture fisheries production"), size=1.5, linetype = "dashed") + 
+  geom_line(aes(y = propCumCount_0, colour = "TFC corpus"), size=1.5) +
+  labs(x = NULL, y = NULL, color = NULL) +
+  theme_ipsum() +
+  theme(legend.position="bottom") +
+  #geom_vline(xintercept=2017,linetype=3, size = 1) + 
+  scale_colour_grey() +
+  scale_x_continuous(breaks = seq(from = 1992, to = 2018, by = 2)) +
+  ylim(0,1)

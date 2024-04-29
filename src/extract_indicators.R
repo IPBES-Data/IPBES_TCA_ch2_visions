@@ -358,7 +358,10 @@ for (i in 1:length(hf_indic)){
 
 
 ### Save extract indic----
-write_csv(ipbes_countries_id, paste0(dir_git, 'output/country_values.csv'))
+write_csv(ipbes_countries_id, paste0(dir_git, 'output/country_values_hf_ghm.csv'))
+
+
+
 
 #ipbes_countries_id = read_csv(paste0(dir_git, 'output/country_values.csv'))
 #ipbes_countries_id2 = full_join(ipbes_countries_id1,ipbes_countries_id, by = c('country','GID_0','ISO_3','region','subregion','ID'))

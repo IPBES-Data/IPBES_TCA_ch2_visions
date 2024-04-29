@@ -18,6 +18,7 @@ library(raster)
 library(tidyterra)
 library(ggplot2)
 library(ggthemes)
+library(corrplot)
 
 # library(geodata) #gadm() and world()
 # library(MazamaSpatialUtils) #convert iso2 into iso3
@@ -96,7 +97,7 @@ ggplot() +
 
 ### Load cases -----
 
-## Location----
+## Location
 cases1 = read_csv(paste0(dir_git,'data/cases/TC_Casos_ordenados5.csv'))
 cases2 = read_csv(paste0(dir_git,'data/cases/TC_Casos_ordenados5_locationOK.csv'))
 
@@ -218,9 +219,8 @@ cases_harm = cases_clean %>%
   mutate(country = gsub('sao tome and principen republic [(]the[)]','sao tome and principe',country)) %>% 
   mutate(country = gsub('^phillippines$','philippines (the)',country)) %>% 
   mutate(country = gsub('^jordania$','jordan',country))
-    # mutate(country = gsub('venezuela','venezuela (bolivarian republic of)',country)) %>% 
-    # mutate(country = gsub('venezuela','venezuela (bolivarian republic of)',country)) %>% 
-    
+
+write_csv(cases_harm,paste0(dir_git,'output/cases/cases_harmonized.csv'))
 
 # identify cases with wrong country assignment  
 country_errors = anti_join(cases_harm,ipbes_regions_countries_df) 
@@ -228,7 +228,6 @@ country_errors %>% distinct(name) %>% count() # 65
 # mostly global cases...some regions are still left e.g.
 country_errors = country_errors  %>% 
   filter(country != 'global') 
-
 #write_csv(country_errors, paste0(dir_git,'cases_need_country_fixes.csv'))
 
 # calculate global cases and total cases 
@@ -239,7 +238,7 @@ total_cases = cases_harm %>% distinct(name) %>% count() #378
 cases_harm %>% distinct(country) %>%  count()
 cases_harm %>% distinct(name, country) %>%  count()
 
-### Match cases locations with ipbes regions and subregions and countries----
+### Match cases locations with ipbes countries----
 
 # countries
 cases_harm_ipbes_countries = cases_harm %>% 
@@ -256,10 +255,13 @@ cases_harm_ipbes_countries = cases_harm %>%
   dplyr::mutate(n_cases_country = n_cases_country + global_cases$n) %>% 
   # calculate proportion
   dplyr::mutate(prop_cases_country = n_cases_country/total_cases$n) 
-  
+
+#write_csv(cases_harm_ipbes_countries, paste0(dir_git, 'output/cases/cases_harm_ipbes_countries.csv'))  
+
 cases_countries = ipbes_countries_robin %>% 
   inner_join(cases_harm_ipbes_countries, by = 'country')
 
+#absolute numbers
 ggplot() + 
   geom_sf(data = cases_countries, mapping = aes(fill = n_cases_country)) + 
   theme(
@@ -270,6 +272,7 @@ ggplot() +
   #coord_sf(crs = 4326) #latlong
   coord_sf(crs = robin)
 
+#Proportions
 ggplot() + 
   geom_sf(data = cases_countries, mapping = aes(fill = prop_cases_country)) + 
   theme(
@@ -280,7 +283,7 @@ ggplot() +
   #coord_sf(crs = 4326) #latlong
   coord_sf(crs = robin)
   
-# get subregion counts
+### Match cases locations with ipbes subregions----
 cases_harm_ipbes_subregions = cases_harm %>% 
   # match with ipbes regions
   inner_join(ipbes_regions_countries_df, by = 'country') %>% 
@@ -300,6 +303,16 @@ cases_subregions = ipbes_regions_fixed_robin %>%
   inner_join(cases_harm_ipbes_subregions, by = c('name'='subregion'))
 
 ggplot() + 
+  geom_sf(data = cases_subregions, mapping = aes(fill = n_cases_subregion)) + 
+  theme(
+    panel.grid.major = element_line(color = gray(.5), linetype = "dashed", linewidth = 0.5), # sets latitude and longitude lines 
+    panel.background = element_rect(fill = "#FFFFFF") # sets background panel color 
+  ) +
+  scale_fill_viridis_c(, name = 'Number of cases\nper IPBES subregion') +
+  #coord_sf(crs = 4326) #latlong
+  coord_sf(crs = robin)
+
+ggplot() + 
   geom_sf(data = cases_subregions, mapping = aes(fill = prop_cases_subregion)) + 
   theme(
     panel.grid.major = element_line(color = gray(.5), linetype = "dashed", size = 0.5), # sets latitude and longitude lines 
@@ -309,7 +322,7 @@ ggplot() +
   #coord_sf(crs = 4326) #latlong
   coord_sf(crs = robin)
 
-# get region counts
+### Match cases locations with ipbes regions----
 cases_harm_ipbes_regions = cases_harm %>% 
   # match with ipbes regions
   inner_join(ipbes_regions_countries_df, by = 'country') %>% 
@@ -329,16 +342,71 @@ cases_regions = ipbes_regions_fixed_robin %>%
   inner_join(cases_harm_ipbes_regions, by = c('name'='region'))
 
 ggplot() + 
+  geom_sf(data = cases_regions, mapping = aes(fill = n_cases_region)) + 
+  theme(
+    panel.grid.major = element_line(color = gray(.5), linetype = "dashed", linewidth = 0.5), # sets latitude and longitude lines 
+    panel.background = element_rect(fill = "#FFFFFF") # sets background panel color 
+  ) +
+  scale_fill_viridis_c(, name = 'Number of cases\nper IPBES region') +
+  #coord_sf(crs = 4326) #latlong
+  coord_sf(crs = robin)
+
+ggplot() + 
   geom_sf(data = cases_regions, mapping = aes(fill = prop_cases_region)) + 
   theme(
-    panel.grid.major = element_line(color = gray(.5), linetype = "dashed", size = 0.5), # sets latitude and longitude lines 
+    panel.grid.major = element_line(color = gray(.5), linetype = "dashed", linewidth = 0.5), # sets latitude and longitude lines 
     panel.background = element_rect(fill = "#FFFFFF") # sets background panel color 
   ) +
   scale_fill_viridis_c(, name = 'Proportion of cases\nper IPBES region') +
   #coord_sf(crs = 4326) #latlong
   coord_sf(crs = robin)
 
-## Join with quantitative indicators
+## Join cases by country with quantitative indicators-----
+indic_countries1 = read_csv(paste0(dir_git, 'output/country_values_nexus.csv'))
+indic_countries2 = read_csv(paste0(dir_git, 'output/country_values_hf_ghm.csv'))
+
+names(indic_countries)
+indic_countries_cases = indic_countries1 %>% 
+  left_join(indic_countries2, by=c('country', 'GID_0','ISO_3','region', 'subregion', 'ID')) %>% 
+  left_join(cases_harm_ipbes_countries, by= 'country') %>% 
+  dplyr::select(-"GroundWater_RcghDeq50",-"GroundWater_RchgDeq50",-"Species_Richness_3taxa",
+                -"food_prod_terr", -"food_prod_terr_lim",-"soil_biodiversity",
+                -"ADM2_ADM1_ADM0_2010",-"TerrStat_hotspots_sum_quant0.1", -'ID') %>% 
+  rename('GroundWater'="GroundWater_GeomaticDeq50",'MarRich'="MSpecies_Richness_9taxa",
+         'ThreatMarRich'="TMSpecies_Richness_8taxa","TerrRich"="Species_Richness_4taxa",
+         "ThreatTerrRich"="TSpecies_Richness_4taxa",
+         "TempVelocity"="TempVelocity_terr_all","crop_prod"="Monfreda_prod_sum_allcrops",
+         "burden_malnut"="IHME_dbl_burden_malnut","lvstk_prod"="Herrero_lvstk_kg",
+         "fish_prod"="Watson_fish_ind_nind_0004","life-exp"="life_expectancy_SHDI_2000",
+         "nxsHotspot"="TerrStat_hotspots_bin_sum_quant0.1")
+names(indic_countries_cases)
+write_csv(indic_countries_cases,paste0(dir_git, 'output/indic_countries_cases2.csv'))
+names(indic_countries_cases)
+
+# calculate correlation among landscape metrics
+matrix = indic_countries_cases %>% 
+  dplyr::select(-country,-"GID_0",-"ISO_3",-"region",-"subregion",-"Built1994",-"HFP1993",
+                -"HFP1993_int",-"HFP2009_int",-"Lights1994",-"NavWater1994",-"Pasture1993",
+                -"Popdensity1990",-"Popdensity2010",-"croplands1992",-"fish_prod",
+                -"MarRich",-"ThreatMarRich",-"NavWater2009", -"Railways",-"Lights2009")
+names(matrix)
+# correlation for all variables
+corr_spearman = as.data.frame(round(cor(matrix, use = "complete.obs", method = "spearman"),
+                                    digits = 2 # rounded to 2 decimals
+))
+plot.new(); dev.off()
+corrplot(cor(matrix, use = "complete.obs", method = "pearson"),
+         method = "number",
+         type = "upper" # show only upper side
+)
+
+# scatterplots
+pairs(dplyr::select(matrix, "n_cases"="n_cases_country","prop_cases"="prop_cases_country",
+                    "TerrRich", "ThreatTerrRich","TempVelocity","crop_prod",
+                    "nxsHotspot","ghm","Built2009","HFP2009"))
+
+
+
 
 
 
