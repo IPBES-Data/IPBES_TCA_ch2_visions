@@ -30,7 +30,6 @@ library(corrplot)
 
 
 ### Set dirs-----
-dir_drive <- 'G:/.shortcut-targets-by-id/18yX-16J7W2Kyq4Mn3YbU_HTjslZyr4hE/IPBES Task Force Knowledge and Data/_DATA/_TSU Internal/_ Weekly reports/Files - Yanina/TfC/cases_CH2'
 dir_git <- 'C:/Users/yanis/Documents/scripts/IPBES-Data/IPBES_TCA_ch2_visions/'
 
 ### Load IPBES regions-----
@@ -221,6 +220,7 @@ cases_harm = cases_clean %>%
   mutate(country = gsub('^jordania$','jordan',country))
 
 write_csv(cases_harm,paste0(dir_git,'output/cases/cases_harmonized.csv'))
+cases_harm = read_csv(paste0(dir_git,'output/cases/cases_harmonized.csv'))
 
 # identify cases with wrong country assignment  
 country_errors = anti_join(cases_harm,ipbes_regions_countries_df) 
@@ -257,6 +257,7 @@ cases_harm_ipbes_countries = cases_harm %>%
   dplyr::mutate(prop_cases_country = n_cases_country/total_cases$n) 
 
 #write_csv(cases_harm_ipbes_countries, paste0(dir_git, 'output/cases/cases_harm_ipbes_countries.csv'))  
+cases_harm_ipbes_countries = read_csv(paste0(dir_git, 'output/cases/cases_harm_ipbes_countries.csv'))  
 
 cases_countries = ipbes_countries_robin %>% 
   inner_join(cases_harm_ipbes_countries, by = 'country')
@@ -265,10 +266,10 @@ cases_countries = ipbes_countries_robin %>%
 ggplot() + 
   geom_sf(data = cases_countries, mapping = aes(fill = n_cases_country)) + 
   theme(
-    panel.grid.major = element_line(color = gray(.5), linetype = "dashed", size = 0.5), # sets latitude and longitude lines 
+    panel.grid.major = element_line(color = gray(.5), linetype = "dashed", linewidth = 0.5), # sets latitude and longitude lines 
     panel.background = element_rect(fill = "#FFFFFF") # sets background panel color 
   ) +
-  scale_fill_viridis_c(, name = 'Number of cases per country') +
+  scale_fill_viridis_c(direction = -1, name = 'Number of cases per country') +
   #coord_sf(crs = 4326) #latlong
   coord_sf(crs = robin)
 

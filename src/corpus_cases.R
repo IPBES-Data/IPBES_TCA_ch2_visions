@@ -641,7 +641,7 @@ p4 + p4c
 
 #### Display ALL together -----
 temp_analisys = temp_analisys %>% 
-  dplyr::mutate(index_forest = (forest_mean*-1)/first(forest_mean*-1)) %>% 
+  dplyr::mutate(index_forest = (forest_mean)/first(forest_mean)) %>% 
   dplyr::mutate(index_anthropo = anthropo_mean/first(anthropo_mean)) %>% 
   dplyr::mutate(index_fish = fish_stock/first(fish_stock)) %>% 
   dplyr::mutate(scaled_forest = scale(forest_mean*-1)) %>% 
@@ -658,11 +658,25 @@ p5 <- ggplot(temp_analisys, ) +
   #scale_y_continuous(labels = scales::percent) +
   labs(y = "", x = '') +
   scale_x_continuous(breaks = seq(from = 1992, to = 2023, by = 5)) +
-  #ylim(0.9,2.3)+
+  ylim(0.9,2.2)+
   #geom_hline(yintercept=0, color="black", linetype=2) +
   #annotate("text", x = 1992, y = 0.0001, label = "Baseline 1992", color = 'black', vjust = 1, hjust = 0) +
   theme_ipsum()
 p5
+
+p5_floss <- ggplot(temp_analisys, ) +
+  geom_line(aes(x=year, y=index_fish), color="light grey",linewidth=2) +
+  geom_line(aes(x=year, y=((1-index_forest)+1)), color="black",linewidth=2) +
+  geom_line(aes(x=year, y=index_anthropo), color="dark grey",linewidth=2) +
+  #scale_y_continuous(labels = scales::percent) +
+  labs(y = "", x = '') +
+  scale_x_continuous(breaks = seq(from = 1992, to = 2023, by = 5)) +
+  ylim(0.9,2.2)+
+  #geom_hline(yintercept=0, color="black", linetype=2) +
+  #annotate("text", x = 1992, y = 0.0001, label = "Baseline 1992", color = 'black', vjust = 1, hjust = 0) +
+  theme_ipsum()
+p5_floss
+p5 + p5_floss
 
 p6 <- ggplot(temp_analisys) +
   geom_line(aes(x=year, y=scaled_fish), color="light grey",linewidth=2) +
@@ -702,7 +716,113 @@ p8 <- ggplot(temp_analisys) +
   #annotate("text", x = 1992, y = 0.0001, label = "Baseline 1992", color = 'black', vjust = 1, hjust = 0) +
   theme_ipsum()
 p8
-p5 +p6 +p7+p8
+
+p8_floss <- ggplot(temp_analisys) +
+  geom_line(aes(x=year, y=fish_stock-first(fish_stock), color="Collapsed and overexploited fish stocks"),linewidth=2) +
+  geom_line(aes(x=year, y=forest_mean_0*-1, color="Forest land cover loss"), linewidth=2) +
+  geom_line(aes(x=year, y=anthropo_mean_0, color="Agriculture and urban land use expansion"),linewidth=2) +
+  #scale_y_continuous(labels = scales::percent) +
+  labs(y = "", x = '') +
+  scale_colour_manual("", 
+                      breaks = c("Forest land cover loss", "Agriculture and urban land use expansion", "Collapsed and overexploited fish stocks"),
+                      values = c("grey", "grey", "grey")) +
+  
+  scale_x_continuous(breaks = seq(from = 1992, to = 2023, by = 5)) +
+  #ylim(0.9,2.3)+
+  #geom_hline(yintercept=0, color="black", linetype=2) +
+  #annotate("text", x = 1992, y = 0.0001, label = "Baseline 1992", color = 'black', vjust = 1, hjust = 0) +
+  theme_ipsum()
+p8_floss
+p8 +p8_floss
+
+p5_floss +p6 +p7+p8_floss
+
+
+### ALL
+
+coeff = 100
+
+# relative values
+ggplot(temp_analisys) + 
+  geom_bar(aes(x = year, y = prop_new_cases_tca, fill = y),
+           stat="identity", fill = '#bbbbbb', color='white') + 
+  geom_line(aes(x = year, y = ((((1-index_forest)+1))/coeff)-1/100,color="Forest loss index", linetype = "Forest loss index"),
+            linewidth=1.5, color='black') + 
+  geom_line(aes(x = year, y = (index_anthropo/coeff)-1/100, color="Agriculture and urban expansion index", linetype = "Agriculture and urban expansion index"),
+            linewidth=1.5, color='black') + 
+  geom_line(aes(x = year, y = (index_fish/coeff)-1/100, color="Collapsed and overexploited fish stocks index", linetype = "Collapsed and overexploited fish stocks index"), 
+            linewidth=2, color='black') + 
+  #geom_hline(yintercept=0, color="black", linetype=2) +
+  #annotate("text", x = 1992, y = -0.00009, label = "Baseline 1992", color = 'black', vjust = 1, hjust = 0) +
+  scale_x_continuous(breaks = seq(from = 1992, to = 2022, by = 5)) +
+  # scale_colour_manual("",
+  #                     breaks = c("Forest loss index", "Agriculture and urban expansion index", "Collapsed and overexploited fish stocks index"),
+  #                     values = c("black","black","black")) +
+  scale_linetype_manual("", 
+                        breaks = c("Forest loss index","Agriculture and urban expansion index","Collapsed and overexploited fish stocks index"),
+                        values = c("solid","twodash","dotted"))+
+  scale_y_continuous(
+    # First axis
+    labels = scales::percent,
+    name = "Cases in TCA corpus",
+    #limits = c(-0.001,0.013),
+    n.breaks=6,
+    # Second axis and specify its features
+    sec.axis = sec_axis(~(.*coeff)+1, 
+                        name="Indices"#,
+                        #breaks = seq(from = 1, to = 3, by = 0.5),
+    )) +
+  labs(x = NULL, y = NULL) +
+  theme_ipsum() +
+  theme(
+    axis.title.y = element_text(color = '#bbbbbb', size=20,hjust = 0.5),
+    axis.title.y.right = element_text(color = "black",size=20,hjust = 0.5),
+    legend.text = element_text(size=15),
+    legend.position="bottom"
+  )
+
+
+# normalized values
+ggplot(temp_analisys) + 
+  geom_bar(aes(x = year, y = prop_new_cases_tca, fill = y),
+           stat="identity", fill = '#bbbbbb', color='white') + 
+  geom_line(aes(x = year, y = normalized_forest/100,color="Forest loss index", linetype = "Forest loss index"),
+            linewidth=1.5, color='black') + 
+  geom_line(aes(x = year, y = normalized_anthropo/100, color="Agriculture and urban expansion index", linetype = "Agriculture and urban expansion index"),
+            linewidth=1.5, color='black') + 
+  geom_line(aes(x = year, y = normalized_fish/100, color="Collapsed and overexploited fish stocks index", linetype = "Collapsed and overexploited fish stocks index"), 
+            linewidth=2, color='black') + 
+  #geom_hline(yintercept=0, color="black", linetype=2) +
+  #annotate("text", x = 1992, y = -0.00009, label = "Baseline 1992", color = 'black', vjust = 1, hjust = 0) +
+  scale_x_continuous(breaks = seq(from = 1992, to = 2022, by = 5)) +
+  # scale_colour_manual("",
+  #                     breaks = c("Forest loss index", "Agriculture and urban expansion index", "Collapsed and overexploited fish stocks index"),
+  #                     values = c("black","black","black")) +
+  scale_linetype_manual("", 
+                        breaks = c("Forest loss index","Agriculture and urban expansion index","Collapsed and overexploited fish stocks index"),
+                        values = c("solid","twodash","dotted"))+
+  scale_y_continuous(
+    # First axis
+    labels = scales::percent,
+    name = "Cases in TCA corpus",
+    #limits = c(-0.001,0.013),
+    n.breaks=6,
+    # Second axis and specify its features
+    sec.axis = sec_axis(~(.*coeff), 
+                        name="Indices"#,
+                        #breaks = seq(from = 1, to = 3, by = 0.5),
+    )) +
+  labs(x = NULL, y = NULL) +
+  theme_ipsum() +
+  theme(
+    axis.title.y = element_text(color = '#bbbbbb', size=20,hjust = 0.5),
+    axis.title.y.right = element_text(color = "black",size=20,hjust = 0.5),
+    legend.text = element_text(size=15),
+    legend.position="bottom"
+  )
+
+
+
 
 temperatureColor <- "#EEBAB4"
 priceColor <- "#7CA1CC"
