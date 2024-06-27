@@ -3,7 +3,16 @@ IPBES_xxx_Chy_project_template.code-workspace
 .Rhistory
 .RData
 .Ruserdata
-data
+data/cases
+data/visions
+data/Population_FAO
+data/tests
+data/IPBES_regions_subregions
 *.shp
 *.gpkg
 *.tif
+src/cases.R
+src/extract_indicators.R
+src/visions.R
+output/visions
+output/cases

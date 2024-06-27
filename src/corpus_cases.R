@@ -783,14 +783,14 @@ ggplot(temp_analisys) +
 
 
 # normalized values
-ggplot(temp_analisys) + 
+plot = ggplot(temp_analisys) + 
   geom_bar(aes(x = year, y = prop_new_cases_tca, fill = y),
            stat="identity", fill = '#bbbbbb', color='white') + 
   geom_line(aes(x = year, y = normalized_forest/100,color="Forest loss index", linetype = "Forest loss index"),
             linewidth=1.5, color='black') + 
-  geom_line(aes(x = year, y = normalized_anthropo/100, color="Agriculture and urban expansion index", linetype = "Agriculture and urban expansion index"),
+  geom_line(aes(x = year, y = normalized_anthropo/100, color="Agriculture and urban\nexpansion index", linetype = "Agriculture and urban\nexpansion index"),
             linewidth=1.5, color='black') + 
-  geom_line(aes(x = year, y = normalized_fish/100, color="Collapsed and overexploited fish stocks index", linetype = "Collapsed and overexploited fish stocks index"), 
+  geom_line(aes(x = year, y = normalized_fish/100, color="Collapsed and overexploited\nfish stocks index", linetype = "Collapsed and overexploited\nfish stocks index"), 
             linewidth=2, color='black') + 
   #geom_hline(yintercept=0, color="black", linetype=2) +
   #annotate("text", x = 1992, y = -0.00009, label = "Baseline 1992", color = 'black', vjust = 1, hjust = 0) +
@@ -799,7 +799,7 @@ ggplot(temp_analisys) +
   #                     breaks = c("Forest loss index", "Agriculture and urban expansion index", "Collapsed and overexploited fish stocks index"),
   #                     values = c("black","black","black")) +
   scale_linetype_manual("", 
-                        breaks = c("Forest loss index","Agriculture and urban expansion index","Collapsed and overexploited fish stocks index"),
+                        breaks = c("Forest loss index","Agriculture and urban\nexpansion index","Collapsed and overexploited\nfish stocks index"),
                         values = c("solid","twodash","dotted"))+
   scale_y_continuous(
     # First axis
@@ -815,12 +815,13 @@ ggplot(temp_analisys) +
   labs(x = NULL, y = NULL) +
   theme_ipsum() +
   theme(
-    axis.title.y = element_text(color = '#bbbbbb', size=20,hjust = 0.5),
+    axis.title.y = element_text(color = '#bbbbbb', size=20,hjust = 0.5,face="bold"),
     axis.title.y.right = element_text(color = "black",size=20,hjust = 0.5),
-    legend.text = element_text(size=15),
+    legend.text = element_text(size=13),
     legend.position="bottom"
   )
-
+plot
+ggsave(file=paste0(dir_git,"output/corpus_cases/cases_quant.svg"), plot=plot, width=8, height=8, dpi = 300)
 
 
 
