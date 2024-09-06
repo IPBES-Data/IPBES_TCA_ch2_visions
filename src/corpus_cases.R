@@ -28,15 +28,15 @@ library(tidyterra)
 #library(rnaturalearthdata)
 
 ### Set dirs-----
-dir_git <- 'C:/Users/yanis/Documents/scripts/IPBES-Data/IPBES_TCA_ch2_visions/'
+dir_git <- 'C:/Users/JLU-SU/Documents/GitHub/IPBES-Data/IPBES_TCA_ch2_visions/'
 
 # load oceans mask
-mask_ocean = terra::rast('C:/Users/yanis/Documents/regions/ocean_mask.tif')
+mask_ocean = terra::rast('G:/My Drive/regions/ocean_mask.tif')
 
 ### Load anthromes change data-----
 # Data available to download ere: https://zenodo.org/records/7561948
 
-ant_change_dir = 'C:/Users/yanis/Documents/IPBES/human_modification_indic/anthrome_change/fraccover_class_100/'
+ant_change_dir = 'G:/My Drive/global_indic/human_modification_indic/anthrome_change/fraccover_class_100/'
 
 #### Class 190: Urban----
 
@@ -398,44 +398,99 @@ land_cover_change = land_cover_change %>%
   mutate(forest_mean_0 = forest_mean - first(forest_mean)) %>% 
   # clean dataset
   dplyr::select(-anthropo_mean_lag, -forest_mean_lag) %>% 
-  write_csv('C:/Users/yanis/Documents/IPBES/human_modification_indic/anthrome_change/global_lc_change_frac100.csv')
+  write_csv('G:/My Drive/global_indic/human_modification_indic/anthrome_change/global_lc_change_frac100.csv')
 
-land_cover_change = read_csv('C:/Users/yanis/Documents/IPBES/human_modification_indic/anthrome_change/global_lc_change_frac100.csv')
+land_cover_change = read_csv('G:/My Drive/global_indic/human_modification_indic/anthrome_change/global_lc_change_frac100.csv')
+str(land_cover_change)
 
+land_cover_change = land_cover_change %>% 
+  # set year as a number
+  mutate(year = as.integer(year)) %>% 
+  # order by year
+  arrange(year) %>% 
+  # calculate dif from previous year (lag) and rate of change
+  mutate(urban_mean_lag = lag(urban_mean, default = first(urban_mean)),
+         urban_change = urban_mean - urban_mean_lag) %>% 
+  mutate(agri_mean_lag = lag(agri_mean, default = first(agri_mean)),
+         agri_change = agri_mean - agri_mean_lag) %>% 
+  # set 1992 as baseline
+  mutate(urban_mean_0 = urban_mean - first(urban_mean)) %>% 
+  mutate(agri_mean_0 = agri_mean - first(agri_mean)) %>% 
+  # clean dataset
+  dplyr::select(-urban_mean_lag, -agri_mean_lag) %>% 
+  write_csv('G:/My Drive/global_indic/human_modification_indic/anthrome_change/global_lc_change_frac100_all.csv')
 
 #### Plot------
-range(land_cover_change$antropo_change)
+range(land_cover_change$anthropo_change)
 range(land_cover_change$forest_change)
+range(land_cover_change$urban_change)
+range(land_cover_change$agri_change)
 
 # Change in separate line charts
-p1 <- ggplot(land_cover_change, aes(x=year, y=antropo_change)) +
+# anthropo (urban + agriculture)
+p1 <- ggplot(land_cover_change, aes(x=year, y=anthropo_change)) +
   geom_line(color="#69b3a2", linewidth=2) +
-  ggtitle("Anthropization") +
+  ggtitle("Anthropo change") +
   theme_ipsum()
 p1
+
+# forest
 p2 <- ggplot(land_cover_change, aes(x=year, y=forest_change)) +
   geom_line(color="grey",linewidth=2) +
-  ggtitle("Forest") +
+  ggtitle("Forest  change") +
   theme_ipsum()
 p2
 p1 + p2
 
+#urban
+p1.1 <- ggplot(land_cover_change, aes(x=year, y=urban_change)) +
+  geom_line(color="#69b3a2", linewidth=2) +
+  ggtitle("Urban  change") +
+  theme_ipsum()
+p1.1
+
+#agriculture
+p1.2 <- ggplot(land_cover_change, aes(x=year, y=agri_change)) +
+  geom_line(color="grey",linewidth=2) +
+  ggtitle("Agriculture  change") +
+  theme_ipsum()
+p1.2
+
+
 # Mean in separate charts
 range(land_cover_change$anthropo_mean)
 range(land_cover_change$forest_mean)
+
+# anthropo (urban + agriculture)
 p3 <- ggplot(land_cover_change, aes(x=year, y=anthropo_mean)) +
   geom_line(color="grey",linewidth=1) +
   #ylim(0, 0.3) +
-  ggtitle("Athropo") +
+  ggtitle("Athropo mean") +
   theme_ipsum()
 p3
+
+# forest
 p4 <- ggplot(land_cover_change, aes(x=year, y=forest_mean)) +
   geom_line(color="grey",linewidth=1) +
   #ylim(0, 0.3) +
-  ggtitle("Forest") +
+  ggtitle("Forest mean") +
   theme_ipsum()
 p4
 p3 + p4
+
+# urban
+p3.1 <- ggplot(land_cover_change, aes(x=year, y=urban_mean)) +
+  geom_line(color="#69b3a2", linewidth=2) +
+  ggtitle("Urban mean") +
+  theme_ipsum()
+p3.1
+
+# agriculture
+p1.2 <- ggplot(land_cover_change, aes(x=year, y=agri_mean)) +
+  geom_line(color="grey",linewidth=2) +
+  ggtitle("Agriculture mean") +
+  theme_ipsum()
+p1.2
 
 # Forest 2022
 forest_2022 = terra::mask(forest[[31]],mask_ocean_p)
@@ -537,13 +592,169 @@ temp_analisys = land_cover_change %>%
 
 
 names(temp_analisys)
-write_csv(temp_analisys,paste0(dir_git, 'data/corpus_cases/oa_fish_lcc_temp_analisys.csv'))
+write_csv(temp_analisys,paste0(dir_git, 'data/corpus_cases/oa_fish_lcc_temp_analisys_all.csv'))
 
-temp_analisys = read_csv(paste0(dir_git, 'data/corpus_cases/oa_fish_lcc_temp_analisys.csv'))
+temp_analisys = read_csv(paste0(dir_git, 'data/corpus_cases/oa_fish_lcc_temp_analisys_all.csv'))
+
+### create normalized, relative and index values----
+
+temp_analisys = temp_analisys %>% 
+  dplyr::mutate(index_forest = (forest_mean)/first(forest_mean)) %>% 
+  dplyr::mutate(index_anthropo = anthropo_mean/first(anthropo_mean)) %>%
+  dplyr::mutate(index_urban = (urban_mean)/first(urban_mean)) %>% 
+  dplyr::mutate(index_agri = agri_mean/first(agri_mean)) %>%
+  dplyr::mutate(index_fish = fish_stock/first(fish_stock)) %>% 
+  # dplyr::mutate(scaled_forest = scale(forest_mean*-1)) %>% 
+  # dplyr::mutate(scaled_anthropo = scale(anthropo_mean)) %>% 
+  # dplyr::mutate(scaled_agri = scale(agri_mean)) %>% 
+  # dplyr::mutate(scaled_urban = scale(urban_mean)) %>%
+  # dplyr::mutate(scaled_fish = scale(fish_stock)) %>% 
+  dplyr::mutate(normalized_forest = ((forest_mean*-1) - min(forest_mean*-1)) / (max(forest_mean*-1) - min(forest_mean*-1))) %>% 
+  dplyr::mutate(normalized_anthropo = (anthropo_mean - min(anthropo_mean)) / (max(anthropo_mean) - min(anthropo_mean))) %>% 
+  dplyr::mutate(normalized_urban = (urban_mean - min(urban_mean)) / (max(urban_mean) - min(urban_mean))) %>% 
+  dplyr::mutate(normalized_agri = (agri_mean - min(agri_mean)) / (max(agri_mean) - min(agri_mean))) %>% 
+  dplyr::mutate(normalized_fish = (fish_stock - min(fish_stock,na.rm = TRUE)) / (max(fish_stock,na.rm = TRUE) - min(fish_stock,na.rm = TRUE)))
+
+write_csv(temp_analisys,paste0(dir_git, 'data/oa_fish_lcc_temp_analisys_all.csv'))
+
+### Figure (ALL normalized values)----
+
+coeff = 100
+
+# Cases in TCA (bars) + forest + anthropogenic + fisheries index
+plot = ggplot(temp_analisys) + 
+  geom_bar(aes(x = year, y = prop_new_cases_tca, fill = y),
+           stat="identity", fill = '#bbbbbb', color='white') + 
+  geom_line(aes(x = year, y = normalized_forest/100,color="Forest loss index", linetype = "Forest loss index"),
+            linewidth=1.5, color='black') + 
+  geom_line(aes(x = year, y = normalized_anthropo/100, color="Agriculture and urban\nexpansion index", linetype = "Agriculture and urban\nexpansion index"),
+            linewidth=1.5, color='black') + 
+  geom_line(aes(x = year, y = normalized_fish/100, color="Collapsed and overexploited\nfish stocks index", linetype = "Collapsed and overexploited\nfish stocks index"), 
+            linewidth=2, color='black') + 
+  #geom_hline(yintercept=0, color="black", linetype=2) +
+  #annotate("text", x = 1992, y = -0.00009, label = "Baseline 1992", color = 'black', vjust = 1, hjust = 0) +
+  scale_x_continuous(breaks = seq(from = 1992, to = 2022, by = 5)) +
+  # scale_colour_manual("",
+  #                     breaks = c("Forest loss index", "Agriculture and urban expansion index", "Collapsed and overexploited fish stocks index"),
+  #                     values = c("black","black","black")) +
+  scale_linetype_manual("", 
+                        breaks = c("Forest loss index","Agriculture and urban\nexpansion index","Collapsed and overexploited\nfish stocks index"),
+                        values = c("solid","twodash","dotted"))+
+  scale_y_continuous(
+    # First axis
+    labels = scales::percent,
+    name = "Cases in TCA corpus",
+    #limits = c(-0.001,0.013),
+    n.breaks=6,
+    # Second axis and specify its features
+    sec.axis = sec_axis(~(.*coeff), 
+                        name="Indices"#,
+                        #breaks = seq(from = 1, to = 3, by = 0.5),
+    )) +
+  labs(x = NULL, y = NULL) +
+  theme_ipsum() +
+  theme(
+    axis.title.y = element_text(color = '#bbbbbb', size=20,hjust = 0.5,face="bold"),
+    axis.title.y.right = element_text(color = "black",size=20,hjust = 0.5),
+    legend.text = element_text(size=13),
+    legend.position="bottom"
+  )
+plot
+ggsave(file=paste0(dir_git,"output/corpus_cases/cases_quant_agri-urban.svg"), plot=plot, width=8, height=8, dpi = 300)
 
 
-# Plots-----
-#### Separate line charts
+# Cases in TCA (bars) + forest + agri + urban + fisheries index
+plot2 = ggplot(temp_analisys) + 
+  geom_bar(aes(x = year, y = prop_new_cases_tca, fill = y),
+           stat="identity", fill = '#bbbbbb', color='white') + 
+  geom_line(aes(x = year, y = normalized_forest/100,color="Forest loss index", linetype = "Forest loss index"),
+            linewidth=1.5, color='black') + 
+  geom_line(aes(x = year, y = normalized_agri/100, color="Agriculture\nexpansion index", linetype = "Agriculture\nexpansion index"),
+            linewidth=1.5, color='black') + 
+  geom_line(aes(x = year, y = normalized_urban/100, color="Urban\nexpansion index", linetype = "Urban\nexpansion index"),
+            linewidth=1.5, color='black') +
+  geom_line(aes(x = year, y = normalized_fish/100, color="Collapsed and overexploited\nfish stocks index", linetype = "Collapsed and overexploited\nfish stocks index"), 
+            linewidth=2, color='black') + 
+  #geom_hline(yintercept=0, color="black", linetype=2) +
+  #annotate("text", x = 1992, y = -0.00009, label = "Baseline 1992", color = 'black', vjust = 1, hjust = 0) +
+  scale_x_continuous(breaks = seq(from = 1992, to = 2022, by = 5)) +
+  # scale_colour_manual("",
+  #                     breaks = c("Forest loss index", "Agriculture and urban expansion index", "Collapsed and overexploited fish stocks index"),
+  #                     values = c("black","black","black")) +
+  scale_linetype_manual("", 
+                        breaks = c("Forest loss index","Agriculture\nexpansion index","Urban\nexpansion index","Collapsed and overexploited\nfish stocks index"),
+                        values = c("solid","dashed","longdash","dotted"))+
+  scale_y_continuous(
+    # First axis
+    labels = scales::percent,
+    name = "Cases in TCA corpus",
+    #limits = c(-0.001,0.013),
+    n.breaks=6,
+    # Second axis and specify its features
+    sec.axis = sec_axis(~(.*coeff), 
+                        name="Indices"#,
+                        #breaks = seq(from = 1, to = 3, by = 0.5),
+    )) +
+  labs(x = NULL, y = NULL) +
+  theme_ipsum() +
+  theme(
+    axis.title.y = element_text(color = '#bbbbbb', size=20,hjust = 0.5,face="bold"),
+    axis.title.y.right = element_text(color = "black",size=20,hjust = 0.5),
+    legend.text = element_text(size=13),
+    legend.position="bottom"
+  )
+plot2
+ggsave(file=paste0(dir_git,"output/corpus_cases/cases_quant_agri-urban.svg"), plot=plot2, width=8, height=8, dpi = 300)
+
+# Cases in TCA (bars) + forest + agri + urban + fisheries index (colors)
+
+plot3 = ggplot(temp_analisys) + 
+  geom_bar(aes(x = year, y = prop_new_cases_tca, fill = y),
+           stat="identity", fill = 'lightgrey', color='white') + 
+  geom_line(aes(x = year, y = normalized_forest/100,color="Forest loss index", linetype = "Forest loss index"),
+            linewidth=1.5, color='darkgreen') + 
+  geom_line(aes(x = year, y = normalized_agri/100, color="Agriculture\nexpansion index", linetype = "Agriculture\nexpansion index"),
+            linewidth=1.5, color='orange') + 
+  geom_line(aes(x = year, y = normalized_urban/100, color="Urban\nexpansion index", linetype = "Urban\nexpansion index"),
+            linewidth=1.5, color='brown') +
+  geom_line(aes(x = year, y = normalized_fish/100, color="Collapsed and overexploited\nfish stocks index", linetype = "Collapsed and overexploited\nfish stocks index"), 
+            linewidth=2, color='darkblue') + 
+  #geom_hline(yintercept=0, color="black", linetype=2) +
+  #annotate("text", x = 1992, y = -0.00009, label = "Baseline 1992", color = 'black', vjust = 1, hjust = 0) +
+  scale_x_continuous(breaks = seq(from = 1992, to = 2022, by = 5)) +
+  # scale_colour_manual("",
+  #                     breaks = c("Forest loss index", "Agriculture and urban expansion index", "Collapsed and overexploited fish stocks index"),
+  #                     values = c("black","black","black")) +
+  scale_linetype_manual("",
+                        breaks = c("Forest loss index","Agriculture\nexpansion index","Urban\nexpansion index","Collapsed and overexploited\nfish stocks index"),
+                        values = c("dashed","dashed","dashed","dashed"))+
+  scale_colour_manual("",
+                        breaks = c("Forest loss index","Agriculture\nexpansion index","Urban\nexpansion index","Collapsed and overexploited\nfish stocks index"),
+                      values = c("darkgreen","orange","brown","darkblue"))+
+  scale_y_continuous(
+    # First axis
+    labels = scales::percent,
+    name = "CASES IN TCA CORPUS",
+    #limits = c(-0.001,0.013),
+    n.breaks=6,
+    # Second axis and specify its features
+    sec.axis = sec_axis(~(.*coeff), 
+                        name="INDICES"#,
+                        #breaks = seq(from = 1, to = 3, by = 0.5),
+    )) +
+  labs(x = NULL, y = NULL) +
+  theme_ipsum() +
+  theme(
+    axis.title.y = element_text(color = '#bbbbbb', size=20,hjust = 0.5,face="bold"),
+    axis.title.y.right = element_text(color = "black",size=20,hjust = 0.5),
+    legend.text = element_text(size=13),
+    legend.position="bottom"
+  )
+plot3
+ggsave(file=paste0(dir_git,"output/corpus_cases/cases_quant_agri-urban_colors.svg"), plot=plot3, width=8, height=8, dpi = 300)
+
+### Testing Plots-----
+#### Separate line charts-----
 range(temp_analisys$prop_new_cases)
 p1c <- ggplot(temp_analisys, aes(x=year, y=prop_new_cases)) +
   geom_line(color="grey",linewidth=2) +
@@ -639,18 +850,6 @@ p4c <- ggplot(temp_analisys, aes(x=year, y=fish_stock_change)) +
 p4c
 p4 + p4c
 
-#### Display ALL together -----
-temp_analisys = temp_analisys %>% 
-  dplyr::mutate(index_forest = (forest_mean)/first(forest_mean)) %>% 
-  dplyr::mutate(index_anthropo = anthropo_mean/first(anthropo_mean)) %>% 
-  dplyr::mutate(index_fish = fish_stock/first(fish_stock)) %>% 
-  dplyr::mutate(scaled_forest = scale(forest_mean*-1)) %>% 
-  dplyr::mutate(scaled_anthropo = scale(anthropo_mean)) %>% 
-  dplyr::mutate(scaled_fish = scale(fish_stock)) %>% 
-  dplyr::mutate(normalized_forest = ((forest_mean*-1) - min(forest_mean*-1)) / (max(forest_mean*-1) - min(forest_mean*-1))) %>% 
-  dplyr::mutate(normalized_anthropo = (anthropo_mean - min(anthropo_mean)) / (max(anthropo_mean) - min(anthropo_mean))) %>% 
-  dplyr::mutate(normalized_fish = (fish_stock - min(fish_stock,na.rm = TRUE)) / (max(fish_stock,na.rm = TRUE) - min(fish_stock,na.rm = TRUE)))
-
 p5 <- ggplot(temp_analisys, ) +
   geom_line(aes(x=year, y=index_fish), color="light grey",linewidth=2) +
   geom_line(aes(x=year, y=index_forest), color="black",linewidth=2) +
@@ -738,7 +937,7 @@ p8 +p8_floss
 p5_floss +p6 +p7+p8_floss
 
 
-### ALL
+#### ALL----
 
 coeff = 100
 
@@ -998,7 +1197,7 @@ ggplot(temp_analisys) +
 
 
 #### Display together anthropogenic areas-----
-### accumulated (mean forest + corpus size), baseline 1992
+### accumulated (mean forest + corpus size), baseline 1992----
 
 range(temp_analisys$anthropo_mean_0)
 range(temp_analisys$prop_aggr_0)
@@ -1130,7 +1329,7 @@ ggplot(temp_analisys) +
 
 
 #### Display together fisheries-----
-### accumulated (mean forest + corpus size), baseline 1992
+### accumulated (mean forest + corpus size), baseline 1992----
 
 range(temp_analisys$anthropo_mean_0)
 range(temp_analisys$prop_aggr_0)
