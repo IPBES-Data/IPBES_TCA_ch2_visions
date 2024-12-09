@@ -14,7 +14,7 @@ library(sf)
 library(terra)
 library(raster)
 
-library(tidyterra)
+#library(tidyterra)
 library(ggplot2)
 #library(ggthemes)
 library(scales)
@@ -24,8 +24,8 @@ library(rnaturalearth)
 library(rnaturalearthdata)
 
 ### Set dirs-----
-dir_git <- 'C:/Users/JLU-SU/Documents/GitHub/IPBES-Data/IPBES_TCA_ch2_visions/'
-dir_drive <- 'G:/My Drive/regions/IPBES_regions_subregions/'
+dir_git <- 'C:/Users/yanis/Documents/scripts/IPBES-Data/IPBES_TCA_ch2_visions/'
+
 ### Load IPBES regions-----
 
 # Download data from zenodo
@@ -42,10 +42,13 @@ dir_drive <- 'G:/My Drive/regions/IPBES_regions_subregions/'
 # Fixed in QGIS: created single features, reduced the extent and merged again Russia and Fiji and appended to other countries
 # still need to upload the new version
 
-ipbes_subregions_fixed <- sf::st_read(paste0(dir_drive,"IPBES_Subregions2OK.shp")) %>% 
-  rename(region = Region, subregion = Sub_Region)
+ipbes_subregions_fixed <- sf::st_read(paste0(dir_git,"data/IPBES_regions_subregions/IPBES_Regions_Subregions2OK_simp.gpkg")) %>% 
+  mutate(name = tolower(name)) %>% 
+  dplyr::select(-layer)
+ipbes_subregions_fixed_df = ipbes_subregions_fixed %>% 
+  st_set_geometry(NULL)
 
-ipbes_regions_countries_df <- read_csv(paste0(dir_drive,"IPBES_Regions_Subregions2.csv")) %>% 
+ipbes_regions_countries_df <- read_csv(paste0(dir_git,"/data/IPBES_regions_subregions/IPBES_Regions_Subregions2.csv")) %>% 
   mutate(country = tolower(Area)) %>% 
   mutate(region = tolower(Region)) %>% 
   mutate(subregion = tolower(Sub_Region)) %>% 
@@ -55,15 +58,12 @@ ipbes_regions_countries_df <- read_csv(paste0(dir_drive,"IPBES_Regions_Subregion
 robin <- "+proj=robin +lon_0=0 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs"
 ipbes_subregions_fixed_robin <- sf::st_transform(ipbes_subregions_fixed, crs = robin) # changes the projection
 
-# transform to latlon
-#latlon <- "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs"
-#ipbes_countries_latlon <- sf::st_transform(ipbes_countries, crs = latlon) # changes the projection
 
 # plot 
 ggplot() + 
-  geom_sf(data = ipbes_subregions_fixed_robin, mapping = aes(fill = subregion)) + #subregions
+  geom_sf(data = filter(ipbes_subregions_fixed_robin, !is.na(parent_id)), mapping = aes(fill = name)) + #regions
   theme(
-    panel.grid.major = element_line(color = gray(.5), linetype = "dashed", size = 0.5), # sets latitude and longitude lines 
+    panel.grid.major = element_line(color = gray(.5), linetype = "dashed", linewidth = 0.5), # sets latitude and longitude lines 
     panel.background = element_rect(fill = "#FFFFFF") # sets background panel color 
   ) +
   scale_fill_viridis_d(, name = 'IPBES Subegions') +
@@ -73,20 +73,22 @@ ggplot() +
 ### Load cases -----
 
 ## Location
-cases1 = read_csv(paste0(dir_git,'data/cases/TC_Casos_ordenados5.csv'))
-cases2 = read_csv(paste0(dir_git,'data/cases/TC_Casos_ordenados5_locationOK.csv'))
-cases3 = read_csv(paste0(dir_git,'data/cases/TC - Casos ordenados 02(2)-Ordenadas.csv'))
-
-names(cases3)
+cases_final = read_csv(paste0(dir_git,'data/cases/2_IPBES_TCA_DMR_Case studies database_(B).csv'))
+names(cases_final)
 
 # clean cases
-cases_clean = dplyr::select(cases3,
-                        "name" = "1- Title of the example with transformative potential",
-                        "continent"="5.a- Location - Continent",
-                        "country" = "5.b- Location - Country"
+cases_clean = dplyr::select(cases_final,
+                            "name" = "1- Title of the example with transformative potential",
+                            "continent"="5.a- Location - Continent", "country" = "5.b- Location - Country", "region_state" = "5.c- Location - Region/State within country",
+                            "start_date" ="8.a- Period of initiation","ongoing"="8.b- Is it still ongoing?",
+                            "end_date" = "8.c- If finished, in which year did it finish?","time_frame"="8.d- Time-frame for the desired changes: main changes occurred over...",
+                            "sector" =  "9.a- Which economic sector is/was chiefly involved? Select more than one if applicable", "other_sector"= "9.b- If you chose 'Other', please provide further details.",
+                            "habitat"="10- What type(s) of habitat(s) was/were involved/affected in the example? Select more than one option, if applicable.",
+                            "scope" = "11- Scale of change attempted by the example.",
+                            "people_pos_affected" = "12- How many people have been affected in this example so far? (Estimated) [Positively]",                                                                                                                                              
+                            "people_neg_affected" = "12- How many people have been affected in this example so far? (Estimated) [Negatively]"
 )
-
-
+names(cases_clean)
 
 # checks
 #cases_clean %>% distinct(country) %>%   View()
@@ -100,7 +102,6 @@ ipbes_regions_countries_df %>% distinct(subregion)
 
 # Harmonize location of cases to match ipbes format
 cases_harm = cases_clean %>% 
-  mutate(country_old = country) %>% 
   #fix misspellings
   mutate(country = tolower(country)) %>% 
   mutate(country = gsub('worldwide','global',country)) %>% 
@@ -110,7 +111,6 @@ cases_harm = cases_clean %>%
   mutate(country = gsub(' and ',', ',country)) %>% 
   mutate(country = gsub('[,][,]',',',country)) %>%
   mutate(country = gsub('all countries','global',country)) %>% 
-  mutate(country = gsub('all','global',country)) %>% 
   mutate(country = gsub('the movement started in sweden','sweden',country)) %>% 
   mutate(country = gsub('global [(]started in austria[,] now based in germany[)]','global',country)) %>% 
   mutate(country = gsub('started in madagascar','madagascar',country)) %>% 
@@ -120,7 +120,8 @@ cases_harm = cases_clean %>%
   mutate(country = gsub('multiple[-] approximately 12 at the moment[.] ','',country)) %>% 
   mutate(country = gsub('countries within the congo basin','congo (the),congo (the democratic republic of the),central african republic (the),cameroon,equatorial guinea,gabon',country)) %>% 
   mutate(country = gsub('central africa','angola, burundi, chad, equatorial guinea, gabon, cameroon,central african republic (the), congo (the),congo (the democratic republic of the), rwanda,sao tome and principe',country)) %>% 
- 
+  
+  
   mutate(country = str_trim(country)) %>% 
   # unnest comma separated items
   mutate(country = strsplit(as.character(country), ",")) %>% 
@@ -190,67 +191,49 @@ cases_harm = cases_clean %>%
   mutate(country = gsub('sao tome and principen republic [(]the[)]','sao tome and principe',country)) %>% 
   mutate(country = gsub('^phillippines$','philippines (the)',country)) %>% 
   mutate(country = gsub('^jordania$','jordan',country)) %>% 
-  mutate(country = gsub('nigeria[.]','nigeria',country)) %>% 
-  filter(country != 'borneo')
+  mutate(country = gsub('^all$','global',country)) %>% 
+  mutate(country = gsub('"','',country)) %>% 
+  mutate(country = gsub('austria\nbelgium\nbulgaria\ncroatia\ncyprus\nczechia\ndenmark\nestonia\nfinland\nfrance\ngermany\ngreece\nhungary\nireland\nitaly\nlatvia\nlithuania\nluxembourg\nmalta\nnetherlands\npoland\nportugal\nromania\nslovakia\nslovenia\nspain\nsweden','austria,belgium,bulgaria,croatia,cyprus,czechia,denmark,estonia,finland,france,germany,greece,hungary,ireland,italy,latvia,lithuania,luxembourg,malta,netherlands,poland,portugal,romania,slovakia,slovenia,spain,sweden',country)) %>% 
+  mutate(country = gsub('austria\nbelgium\nbulgaria\ncroatia\ncyprus\nczechia\ndenmark\nestonia\nfinland\nfrance\ngermany\ngreece\nhungary\nireland\nitaly\nlatvia\nlithuania\nluxembourg\nmalta\nnetherlands\npoland\nportugal\nromania\nslovakia\nslovenia\nspain\nsweden\n','austria,belgium,bulgaria,croatia,cyprus,czechia,denmark,estonia,finland,france,germany,greece,hungary,ireland,italy,latvia,lithuania,luxembourg,malta,netherlands,poland,portugal,romania,slovakia,slovenia,spain,sweden',country)) %>% 
+  mutate(country = gsub('^nigeria[.]$','jordan',country))
 
+cases_harm[393,1:3]
+cases_harm[305,1:3]
+
+cases_fix = cases_harm %>% 
+  filter(name %in% c('European Green Deal (EGD)', 'AKTEA' )) %>% 
+  mutate(country = str_split(country, ",")) %>%
+  unnest(country) %>% 
+  rbind(filter(cases_harm, !name %in% c('European Green Deal (EGD)', 'AKTEA' ))) %>% 
+  mutate(country = gsub('^sweden\n$','sweden',country)) %>% 
+  mutate(country = gsub('^netherlands$','netherlands (the)',country)) %>% 
+  distinct(name, country)
+
+#write_csv(cases_fix,paste0(dir_git,'output/cases/cases_harmonized.csv'))
+#cases_fix = read_csv(paste0(dir_git,'output/cases/cases_harmonized.csv'))
 
 # identify cases with wrong country assignment  
-country_errors = anti_join(cases_harm,ipbes_regions_countries_df) 
-country_errors %>% distinct(name) %>% count() # 65
-# mostly global cases...some regions are still left e.g.
-country_errors = country_errors  %>% 
-  filter(country != 'global') 
-### I added these cases to the count of cases per subregion
-
-# save harmonized layer and issues
-write_csv(country_errors, paste0(dir_git,'data/cases/cases_need_country_fixes.csv'))
-write_csv(cases_harm,paste0(dir_git,'data/cases/cases_harmonized.csv'))
-
-# calculate global cases and total cases 
-global_cases = cases_harm %>% filter(country == 'global') %>% count() #62
+country_errors = anti_join(cases_fix,ipbes_regions_countries_df, by = 'country') 
+country_errors %>% distinct(name) %>% count() # 67
+# mostly global cases and some regions e.g. europa, european union member states, africa, borneo, brittish overseas terretories
 
 # calculate errors
-errors_africa = filter(country_errors, continent == 'Africa') %>% count()
-errors_europa = filter(country_errors, country == 'europe') %>% count()
-errors_eu = filter(country_errors, country == 'european union member states') %>% count()
+country_errors = country_errors  %>% 
+  filter(country != 'global') 
+#write_csv(country_errors, paste0(dir_git,'cases_need_country_fixes.csv'))
+errors_africa = filter(country_errors, country == 'africa') %>% count()
+errors_eu = filter(country_errors, country %in% c('europe','european union member states')) %>% count()
 
-### Match cases locations with ipbes regions, subregions via countries----
+# calculate global cases and total cases 
+global_cases = cases_fix %>% filter(country == 'global') %>% count() #60
+total_cases = cases_fix %>% distinct(name) %>% count() #390
 
-# countries
-cases_harm_ipbes_countries = cases_harm %>% 
-  # match with ipbes regions
-  inner_join(ipbes_regions_countries_df, by = 'country') %>% 
-  dplyr::select(-'country_old', -"continent",-"ISO_3") %>% 
-  # get country counts
-  distinct(name, country, .keep_all = TRUE) %>% 
-  group_by(country) %>% 
-  add_count() %>% 
-  ungroup() %>% 
-  distinct(country, n, .keep_all = TRUE) %>% 
-  dplyr::select(country, n_cases_country = n) %>% 
-  # add global cases
-  dplyr::mutate(n_cases_country = n_cases_country + global_cases$n)
+# checks 
+cases_fix %>% distinct(country) %>%  count() #150
+cases_fix %>% distinct(name, country) %>%  count() #648
 
-#write_csv(cases_harm_ipbes_countries, paste0(dir_git, 'output/cases/cases_harm_ipbes_countries.csv'))  
-cases_harm_ipbes_countries = read_csv(paste0(dir_git, 'output/cases/cases_harm_ipbes_countries.csv'))  
-
-cases_countries = ipbes_countries_robin %>% 
-  inner_join(cases_harm_ipbes_countries, by = 'country')
-
-#absolute numbers
-ggplot() + 
-  geom_sf(data = cases_countries, mapping = aes(fill = n_cases_country)) + 
-  theme(
-    panel.grid.major = element_line(color = gray(.5), linetype = "dashed", linewidth = 0.5), # sets latitude and longitude lines 
-    panel.background = element_rect(fill = "#FFFFFF") # sets background panel color 
-  ) +
-  scale_fill_viridis_c(direction = -1, name = 'Number of cases per country') +
-  #coord_sf(crs = 4326) #latlong
-  coord_sf(crs = robin)
-
-  
 ### Match cases locations with ipbes subregions----
-cases_harm_ipbes_subregions = cases_harm %>% 
+cases_harm_ipbes_subregions = cases_fix %>% 
   # match with ipbes regions
   inner_join(ipbes_regions_countries_df, by = 'country') %>% 
   # get subregions count
@@ -261,27 +244,16 @@ cases_harm_ipbes_subregions = cases_harm %>%
   distinct(subregion, n, .keep_all = TRUE) %>% 
   dplyr::select(subregion, n_cases_subregion = n) %>% 
   # add global cases
-  dplyr::mutate(n_cases_subregion = n_cases_subregion + global_cases$n) %>% 
-  # add errors
-  dplyr::mutate(n_cases_subregion = if_else(subregion %in% c('east africa and adjacent islands','central africa','north africa','southern africa','west africa'),
-                                            true = n_cases_subregion + errors_africa$n,
-                                            false = n_cases_subregion)) %>% 
-  dplyr::mutate(n_cases_subregion = if_else(subregion %in% c('central and western europe','eastern europe'),
-                                            true = n_cases_subregion + errors_europa$n,
-                                            false = n_cases_subregion)) %>% 
-  dplyr::mutate(n_cases_subregion = if_else(subregion %in% c('central and western europe'),
-                                            true = n_cases_subregion + errors_eu$n,
-                                            false = n_cases_subregion))
-                  
+  dplyr::mutate(n_cases_subregion = n_cases_subregion + global_cases$n) 
 
+# get geometry
 cases_subregions = ipbes_subregions_fixed_robin %>% 
-  mutate(subregion = tolower(subregion)) %>% 
-  inner_join(cases_harm_ipbes_subregions, by = 'subregion')
+  inner_join(cases_harm_ipbes_subregions, by = c('name'='subregion'))
 
-# get global data
+# get global data from naturalerath (easy plotting)
 world <- ne_countries(scale = "medium", returnclass = "sf")
 
-plot = ggplot() + 
+figureSPM = ggplot() + 
   # world
   geom_sf(data = filter(world, admin == 'Antarctica'), fill = "#BFBFBF", color = "#F2F2F2") +
   # cases in subregions
@@ -293,7 +265,12 @@ plot = ggplot() +
   scale_fill_viridis_c(, name = 'Number of cases\nper IPBES subregion', direction = -1) +
   coord_sf(crs = robin)
 
-ggsave(file=paste0(dir_git,"output/cases/cases_subregions.png"), plot=plot, width=10, height=8, dpi = 300)
+figureSPM
+
+ggsave(file=paste0(dir_git,"output/cases/cases_subregions.png"), plot=figureSPM, width=10, height=8, dpi = 300)
+ggsave(file=paste0(dir_git,"output/cases/cases_subregions.pdf"), plot=figureSPM, width=10, height=8, dpi = 300)
+ggsave(file=paste0(dir_git,"output/cases/cases_subregions.eps"), plot=figureSPM, width=10, height=8, dpi = 300)
+ggsave(file=paste0(dir_git,"output/cases/cases_subregions.svg"), plot=figureSPM, width=10, height=8, dpi = 300)
 
 
 

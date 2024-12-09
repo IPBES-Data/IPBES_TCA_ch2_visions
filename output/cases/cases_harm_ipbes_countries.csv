@@ -1,146 +1,145 @@
-country,n_cases_country
-brazil,78
-sweden,82
-australia,74
-france,79
-mexico,66
-tajikistan,63
-china,84
-ethiopia,67
-nepal,67
-spain,96
-netherlands (the),71
-south africa,67
-argentina,79
-chile,83
-colombia,73
-norway,68
-portugal,67
-slovenia,65
-croatia,67
-turkey,64
-lebanon,64
-tunisia,66
-taiwan (province of china),65
-united kingdom of great britain and northern ireland (the),77
-germany,72
-india,78
-japan,66
-costa rica,67
-indonesia,72
-madagascar,65
-ukraine,64
-italy,67
-greece,65
-albania,63
-algeria,64
-mozambique,64
-peru,68
-uruguay,67
-"tanzania, the united republic of",69
-united states of america (the),82
-canada,75
-malaysia,63
-cambodia,63
-lao people's democratic republic (the),63
-viet nam,64
-myanmar,64
-thailand,64
-brunei darussalam,63
-timor-leste,64
-philippines (the),64
-singapore,63
-honduras,63
-rwanda,64
-uganda,65
-cuba,63
-kenya,78
-nicaragua,66
-côte d'ivoire,64
-ghana,64
-togo,64
-cameroon,64
-somalia,65
-new zealand,66
-namibia,64
-congo (the),64
-congo (the democratic republic of the),64
-angola,64
-burundi,63
-chad,64
-equatorial guinea,63
-gabon,66
-central african republic (the),63
-sao tome and principe,64
-nigeria,69
-suriname,65
-palau,63
-ecuador,67
-panama,64
-belgium,66
-papua new guinea,63
-antigua and barbuda,63
-barbados,63
-belize,65
-dominican republic (the),63
-grenada,63
-guyana,66
-jamaica,63
-montserrat,63
-saint kitts and nevis,63
-saint lucia,63
-saint vincent and the grenadines,63
-trinidad and tobago,63
-israel,64
-bolivia (plurinational state of),65
-gambia (the),67
-guatemala,64
-liberia,63
-zambia,64
-burkina faso,64
-benin,63
-cabo verde,65
-djibouti,63
-egypt,63
-libya,63
-mali,63
-mauritania,63
-niger (the),63
-senegal,65
-sudan (the),63
-finland,72
-estonia,65
-latvia,66
-lithuania,65
-poland,66
-denmark,67
-bangladesh,65
-austria,65
-bulgaria,65
-cyprus,64
-czechia,64
-hungary,65
-ireland,64
-luxembourg,64
-malta,65
-romania,65
-slovakia,64
-cook islands (the),63
-seychelles,63
-mauritius,63
-morocco,64
-solomon islands,63
-malawi,63
-paraguay,64
-venezuela (bolivarian republic of),64
-comoros (the),63
-guinea-bissau,63
-bahamas (the),63
-jordan,63
-"palestine, state of",63
-moldova (the republic of),63
-switzerland,65
-russian federation (the),63
-greenland,63
-iceland,63
-bhutan,63
+country,n_cases_country,prop_cases_country
+austria,63,0.16153846153846155
+belgium,64,0.1641025641025641
+bulgaria,63,0.16153846153846155
+croatia,65,0.16666666666666666
+cyprus,62,0.15897435897435896
+czechia,62,0.15897435897435896
+denmark,65,0.16666666666666666
+estonia,63,0.16153846153846155
+finland,70,0.1794871794871795
+france,77,0.19743589743589743
+germany,70,0.1794871794871795
+greece,63,0.16153846153846155
+hungary,63,0.16153846153846155
+ireland,62,0.15897435897435896
+italy,65,0.16666666666666666
+latvia,64,0.1641025641025641
+lithuania,63,0.16153846153846155
+luxembourg,62,0.15897435897435896
+malta,63,0.16153846153846155
+netherlands (the),69,0.17692307692307693
+poland,64,0.1641025641025641
+portugal,65,0.16666666666666666
+romania,63,0.16153846153846155
+slovakia,62,0.15897435897435896
+slovenia,63,0.16153846153846155
+spain,94,0.24102564102564103
+sweden,80,0.20512820512820512
+brazil,76,0.19487179487179487
+australia,71,0.18205128205128204
+mexico,64,0.1641025641025641
+tajikistan,61,0.1564102564102564
+china,82,0.21025641025641026
+ethiopia,65,0.16666666666666666
+nepal,65,0.16666666666666666
+south africa,65,0.16666666666666666
+argentina,77,0.19743589743589743
+chile,81,0.2076923076923077
+colombia,71,0.18205128205128204
+norway,66,0.16923076923076924
+turkey,62,0.15897435897435896
+lebanon,62,0.15897435897435896
+tunisia,64,0.1641025641025641
+taiwan (province of china),63,0.16153846153846155
+united kingdom of great britain and northern ireland (the),75,0.19230769230769232
+india,75,0.19230769230769232
+japan,64,0.1641025641025641
+costa rica,65,0.16666666666666666
+indonesia,70,0.1794871794871795
+madagascar,63,0.16153846153846155
+ukraine,62,0.15897435897435896
+albania,61,0.1564102564102564
+algeria,62,0.15897435897435896
+mozambique,62,0.15897435897435896
+peru,66,0.16923076923076924
+uruguay,65,0.16666666666666666
+"tanzania, the united republic of",67,0.1717948717948718
+united states of america (the),80,0.20512820512820512
+canada,73,0.18717948717948718
+malaysia,61,0.1564102564102564
+cambodia,61,0.1564102564102564
+lao people's democratic republic (the),61,0.1564102564102564
+viet nam,62,0.15897435897435896
+myanmar,62,0.15897435897435896
+thailand,62,0.15897435897435896
+brunei darussalam,61,0.1564102564102564
+timor-leste,62,0.15897435897435896
+philippines (the),62,0.15897435897435896
+singapore,61,0.1564102564102564
+honduras,61,0.1564102564102564
+rwanda,62,0.15897435897435896
+uganda,63,0.16153846153846155
+cuba,61,0.1564102564102564
+kenya,76,0.19487179487179487
+nicaragua,64,0.1641025641025641
+côte d'ivoire,62,0.15897435897435896
+ghana,62,0.15897435897435896
+togo,62,0.15897435897435896
+cameroon,62,0.15897435897435896
+somalia,63,0.16153846153846155
+new zealand,64,0.1641025641025641
+namibia,62,0.15897435897435896
+congo (the),62,0.15897435897435896
+congo (the democratic republic of the),62,0.15897435897435896
+angola,62,0.15897435897435896
+burundi,61,0.1564102564102564
+chad,62,0.15897435897435896
+equatorial guinea,61,0.1564102564102564
+gabon,64,0.1641025641025641
+central african republic (the),61,0.1564102564102564
+sao tome and principe,62,0.15897435897435896
+nigeria,66,0.16923076923076924
+suriname,63,0.16153846153846155
+palau,61,0.1564102564102564
+ecuador,65,0.16666666666666666
+panama,62,0.15897435897435896
+papua new guinea,61,0.1564102564102564
+antigua and barbuda,61,0.1564102564102564
+barbados,61,0.1564102564102564
+belize,63,0.16153846153846155
+dominican republic (the),61,0.1564102564102564
+grenada,61,0.1564102564102564
+guyana,64,0.1641025641025641
+jamaica,61,0.1564102564102564
+montserrat,61,0.1564102564102564
+saint kitts and nevis,61,0.1564102564102564
+saint lucia,61,0.1564102564102564
+saint vincent and the grenadines,61,0.1564102564102564
+trinidad and tobago,61,0.1564102564102564
+israel,61,0.1564102564102564
+bolivia (plurinational state of),63,0.16153846153846155
+gambia (the),65,0.16666666666666666
+guatemala,62,0.15897435897435896
+liberia,61,0.1564102564102564
+zambia,62,0.15897435897435896
+burkina faso,62,0.15897435897435896
+benin,61,0.1564102564102564
+cabo verde,63,0.16153846153846155
+djibouti,61,0.1564102564102564
+egypt,61,0.1564102564102564
+libya,61,0.1564102564102564
+mali,61,0.1564102564102564
+mauritania,61,0.1564102564102564
+niger (the),61,0.1564102564102564
+senegal,63,0.16153846153846155
+sudan (the),61,0.1564102564102564
+bangladesh,63,0.16153846153846155
+cook islands (the),61,0.1564102564102564
+seychelles,61,0.1564102564102564
+mauritius,61,0.1564102564102564
+morocco,62,0.15897435897435896
+solomon islands,61,0.1564102564102564
+malawi,61,0.1564102564102564
+paraguay,62,0.15897435897435896
+venezuela (bolivarian republic of),62,0.15897435897435896
+comoros (the),61,0.1564102564102564
+guinea-bissau,61,0.1564102564102564
+bahamas (the),61,0.1564102564102564
+moldova (the republic of),61,0.1564102564102564
+switzerland,63,0.16153846153846155
+russian federation (the),61,0.1564102564102564
+greenland,61,0.1564102564102564
+jordan,61,0.1564102564102564
+iceland,61,0.1564102564102564
+bhutan,61,0.1564102564102564

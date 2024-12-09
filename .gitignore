@@ -11,8 +11,20 @@ data/IPBES_regions_subregions
 *.shp
 *.gpkg
 *.tif
-src/cases.R
+*.png
+
+data/cases/TC - Casos ordenados(5).xlsx
+data/cases/TC - Casos ordenados(5)_with visions_April14_24.xlsx
+data/cases/TC_Casos_ordenados5.csv
+data/cases/TC_Casos_ordenados5_locationOK.csv
+
+data/IPBES_regions_subregions
+data/tests
+data/visions
+
 src/extract_indicators.R
 src/visions.R
+src/cases.R
+
 output/visions
-output/cases
+
