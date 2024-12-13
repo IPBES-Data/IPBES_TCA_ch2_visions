@@ -1,26 +1,19 @@
-IPBES_xxx_Chy_project_template.code-workspace
+
 .Rproj.user
 .Rhistory
 .RData
 .Ruserdata
-data/cases
-data/visions
-data/Population_FAO
-data/tests
-data/IPBES_regions_subregions
+
 *.shp
 *.gpkg
 *.tif
 *.png
 
-data/cases/TC - Casos ordenados(5).xlsx
-data/cases/TC - Casos ordenados(5)_with visions_April14_24.xlsx
-data/cases/TC_Casos_ordenados5.csv
-data/cases/TC_Casos_ordenados5_locationOK.csv
-
+data/cases/archive
 data/IPBES_regions_subregions
 data/tests
 data/visions
+data/Population_FAO
 
 src/extract_indicators.R
 src/visions.R
